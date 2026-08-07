@@ -491,16 +491,3 @@ async def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
-
-playwright==1.62.0
-
-{
-  "initialized": false,
-  "seen": {
-    "myhome_rent": []
-  },
-  "max_ids": {
-    "myhome_rent": 0
-  },
-  "heartbeat_week": ""
-}
