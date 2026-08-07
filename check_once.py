@@ -26,7 +26,7 @@ SOURCES = [
         "site": "MyHome.ge",
         "deal": "rent",
         "rooms": None,
-        "pages": 50,
+        "pages": 22,
         "url": (
             "https://www.myhome.ge/udzravi-qoneba/qiravdeba/bina/"
             "tbilisi/vake/?deal_types=2&real_estate_types=1%2C2%2C3"
