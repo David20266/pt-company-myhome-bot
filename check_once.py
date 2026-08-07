@@ -172,6 +172,42 @@ def is_target_location(text: str, url: str) -> bool:
 
 
 def extract_location(text: str) -> str:
+    locations = [
+        "საბურთალო",
+        "ვაკე",
+        "ლისის მიმდებარედ",
+        "ნუცუბიძის ფერდობი",
+        "დიდი დიღომი",
+        "დიღომი",
+        "ვერა",
+        "მთაწმინდა",
+        "სოლოლაკი",
+        "ჩუღურეთი",
+        "დიდუბე",
+        "ნაძალადევი",
+        "გლდანი",
+        "მუხიანი",
+        "ვარკეთილი",
+        "ისანი",
+        "სამგორი",
+        "ავლაბარი",
+        "ორთაჭალა",
+        "კრწანისი",
+        "ვაზისუბანი",
+        "ლილო",
+        "თბილისის ზღვა",
+        "ოქროყანა",
+        "წყნეთი",
+        "კოჯორი",
+        "ტაბახმელა",
+    ]
+
+    lowered = normalize_text(text).lower()
+
+    for location in locations:
+        if location.lower() in lowered:
+            return location
+
     return "თბილისი"
 
 
@@ -256,7 +292,23 @@ async def collect_page_links(page: Any) -> list[dict[str, str]]:
               }
             }
 
-            results.push({href, text});
+            let imageUrl = "";
+
+            const imageNode =
+              (node && node.querySelector && node.querySelector("img")) ||
+              (anchor.querySelector && anchor.querySelector("img"));
+
+            if (imageNode) {
+              imageUrl = (
+                imageNode.currentSrc ||
+                imageNode.src ||
+                imageNode.getAttribute("data-src") ||
+                imageNode.getAttribute("data-lazy-src") ||
+                ""
+              );
+            }
+
+            results.push({href, text, imageUrl});
           }
 
           return results;
@@ -327,6 +379,17 @@ async def scrape_all_sources():
 
                     candidates = await collect_page_links(page)
 
+                    page_listing_ids = {
+                        listing_id_from_url(source["site"], item["href"])
+                        for item in candidates
+                    }
+                    page_listing_ids.discard(None)
+
+                    print(
+                        f"{source['key']} page {page_number}: "
+                        f"{len(page_listing_ids)} listing IDs detected"
+                    )
+
                     for candidate in candidates:
                         url = candidate["href"].split("#", 1)[0]
 
@@ -376,6 +439,7 @@ async def scrape_all_sources():
                             "price": extract_price(text),
                             "area": extract_area(text),
                             "location": extract_location(text),
+                            "image_url": candidate.get("imageUrl", ""),
                             "summary": text[:700],
                         }
 
@@ -482,6 +546,45 @@ def send_telegram(text: str) -> None:
             )
 
 
+def send_listing_to_telegram(item: dict[str, Any]) -> None:
+    caption = format_listing(item)
+    image_url = (item.get("image_url") or "").strip()
+
+    if image_url.startswith("//"):
+        image_url = "https:" + image_url
+
+    if image_url.startswith("http"):
+        data = urllib.parse.urlencode(
+            {
+                "chat_id": CHAT_ID,
+                "photo": image_url,
+                "caption": caption,
+                "parse_mode": "HTML",
+            }
+        ).encode("utf-8")
+
+        request = urllib.request.Request(
+            f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
+            data=data,
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=30,
+            ) as response:
+                if response.status == 200:
+                    return
+        except Exception as exc:
+            print(
+                f"Photo send failed for {item['listing_id']}: {exc}; "
+                "falling back to text message"
+            )
+
+    send_telegram(caption)
+
+
 def format_listing(item: dict[str, Any]) -> str:
     rooms = item["rooms"] if item["rooms"] is not None else "—"
 
@@ -495,7 +598,7 @@ def format_listing(item: dict[str, Any]) -> str:
         f"🌐 <b>საიტი:</b> "
         f"{html.escape(item['site'])}\n"
         "🔑 <b>გარიგება:</b> ქირავდება\n"
-        f"📍 <b>ქალაქი:</b> "
+        f"📍 <b>უბანი:</b> "
         f"{html.escape(item['location'])}\n"
         f"🚪 <b>ოთახები:</b> {rooms}\n"
         f"📐 <b>ფართობი:</b> "
@@ -537,11 +640,7 @@ async def main() -> int:
         seen = state["seen"][key]
 
         if listing_id not in seen:
-            if (
-                initialized
-                and int(listing_id)
-                > int(state["max_ids"][key])
-            ):
+            if initialized:
                 new_items.append(item)
 
             seen.append(listing_id)
@@ -570,7 +669,7 @@ async def main() -> int:
         )
 
         for item in new_items:
-            send_telegram(format_listing(item))
+            send_listing_to_telegram(item)
 
     state["heartbeat_week"] = datetime.now(
         timezone.utc
