@@ -48,6 +48,19 @@ jobs:
 
           git commit -m "Update apartment monitoring state"
 
-          git fetch origin main
-          git rebase origin/main
-          git push origin HEAD:main
+          for attempt in 1 2 3; do
+            echo "Push attempt $attempt"
+
+            git fetch origin main
+
+            if git rebase origin/main && git push origin HEAD:main; then
+              echo "Monitoring state saved successfully"
+              exit 0
+            fi
+
+            git rebase --abort || true
+            sleep 5
+          done
+
+          echo "Failed to save monitoring state after 3 attempts"
+          exit 1
