@@ -546,7 +546,12 @@ def send_telegram(text: str) -> None:
             )
 
 
-def get_listing_image(url: str) -> str:
+def get_listing_details(url: str) -> dict[str, str]:
+    details = {
+        "image_url": "",
+        "location": "",
+    }
+
     request = urllib.request.Request(
         url,
         headers={
@@ -567,17 +572,17 @@ def get_listing_image(url: str) -> str:
         with urllib.request.urlopen(request, timeout=30) as response:
             page_html = response.read().decode("utf-8", errors="ignore")
     except Exception as exc:
-        print(f"Could not open listing page for image: {url}: {exc}")
-        return ""
+        print(f"Could not open listing page: {url}: {exc}")
+        return details
 
-    patterns = [
+    image_patterns = [
         r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
         r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
     ]
 
-    for pattern in patterns:
+    for pattern in image_patterns:
         match = re.search(pattern, page_html, re.IGNORECASE)
 
         if match:
@@ -589,15 +594,75 @@ def get_listing_image(url: str) -> str:
                 image_url = urllib.parse.urljoin(url, image_url)
 
             if image_url.startswith("http"):
-                return image_url
+                details["image_url"] = image_url
+                break
 
-    print(f"No listing-specific image found for {url}")
-    return ""
+    # Read the location from listing-specific metadata first.
+    # This avoids using generic page/menu text and prevents a random
+    # Tbilisi district from being assigned to the listing.
+    metadata_parts: list[str] = []
+
+    meta_patterns = [
+        r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']',
+        r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']',
+        r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
+        r'<title[^>]*>(.*?)</title>',
+    ]
+
+    for pattern in meta_patterns:
+        for match in re.finditer(
+            pattern,
+            page_html,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            value = html.unescape(match.group(1))
+            value = re.sub(r"<[^>]+>", " ", value)
+            metadata_parts.append(normalize_text(value))
+
+    metadata_text = " ".join(metadata_parts)
+    metadata_location = extract_location(metadata_text)
+
+    if metadata_location != "თბილისი":
+        details["location"] = metadata_location
+    else:
+        # Fallback: look for district names in structured data / page source.
+        # We only accept a district if exactly one known district is found,
+        # which avoids choosing a district from navigation menus.
+        locations = [
+            "საბურთალო", "ვაკე", "ლისის მიმდებარედ",
+            "ნუცუბიძის ფერდობი", "დიდი დიღომი", "დიღომი",
+            "ვერა", "მთაწმინდა", "სოლოლაკი", "ჩუღურეთი",
+            "დიდუბე", "ნაძალადევი", "გლდანი", "მუხიანი",
+            "ვარკეთილი", "ისანი", "სამგორი", "ავლაბარი",
+            "ორთაჭალა", "კრწანისი", "ვაზისუბანი", "ლილო",
+            "თბილისის ზღვა", "ოქროყანა", "წყნეთი", "კოჯორი",
+            "ტაბახმელა",
+        ]
+        lowered_source = html.unescape(page_html).lower()
+        found = [
+            location
+            for location in locations
+            if location.lower() in lowered_source
+        ]
+
+        if len(found) == 1:
+            details["location"] = found[0]
+
+    return details
 
 
 def send_listing_to_telegram(item: dict[str, Any]) -> None:
+    details = get_listing_details(item["url"])
+
+    if details["location"]:
+        item = dict(item)
+        item["location"] = details["location"]
+
     caption = format_listing(item)
-    image_url = get_listing_image(item["url"])
+    image_url = details["image_url"]
 
     if image_url:
         data = urllib.parse.urlencode(
