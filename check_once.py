@@ -18,6 +18,8 @@ STATE_PATH = Path(__file__).resolve().parent / "state.json"
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
+_NBG_RATES_CACHE: dict[str, float] | None = None
+
 SOURCES = [
     {
         "key": "myhome_rent",
@@ -60,9 +62,100 @@ def extract_room_count(text: str, url: str) -> int | None:
     return None
 
 
+def get_nbg_rates() -> dict[str, float]:
+    global _NBG_RATES_CACHE
+
+    if _NBG_RATES_CACHE is not None:
+        return _NBG_RATES_CACHE
+
+    url = (
+        "https://nbg.gov.ge/gw/api/ct/"
+        "monetarypolicy/currencies/ka/json/"
+    )
+
+    try:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "application/json",
+            },
+        )
+
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        currencies = payload[0]["currencies"]
+        _NBG_RATES_CACHE = {
+            item["code"]: float(item["rate"]) / float(item["quantity"])
+            for item in currencies
+        }
+
+    except Exception as exc:
+        print(f"Could not load NBG exchange rates: {exc}")
+        _NBG_RATES_CACHE = {}
+
+    return _NBG_RATES_CACHE
+
+
+def parse_price_number(raw: str) -> float | None:
+    cleaned = re.sub(r"[^0-9.,]", "", raw)
+
+    if not cleaned:
+        return None
+
+    # MyHome commonly formats thousands as 1,400 or 1 400.
+    if re.fullmatch(r"\d{1,3}(?:,\d{3})+", cleaned):
+        cleaned = cleaned.replace(",", "")
+    elif re.fullmatch(r"\d{1,3}(?:\.\d{3})+", cleaned):
+        cleaned = cleaned.replace(".", "")
+    else:
+        cleaned = cleaned.replace(",", ".")
+
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
 def extract_price(text: str) -> str:
-    match = re.search(r"(?<!\d)(\d[\d ,.]*?)\s*(₾|\$|€)", text)
-    return normalize_text("".join(match.groups())) if match else "—"
+    match = re.search(
+        r"(?<!\d)(\d[\d ,.]*?)\s*(₾|\$|€)",
+        text,
+    )
+
+    if not match:
+        return "—"
+
+    amount = parse_price_number(match.group(1))
+    currency = match.group(2)
+
+    if amount is None:
+        return "—"
+
+    if currency == "$":
+        usd = amount
+    else:
+        rates = get_nbg_rates()
+        usd_gel = rates.get("USD")
+
+        if not usd_gel:
+            return "—"
+
+        if currency == "₾":
+            usd = amount / usd_gel
+        elif currency == "€":
+            eur_gel = rates.get("EUR")
+
+            if not eur_gel:
+                return "—"
+
+            usd = amount * eur_gel / usd_gel
+        else:
+            return "—"
+
+    rounded = int(round(usd))
+    return f"${rounded:,}"
 
 
 def extract_area(text: str) -> str:
@@ -369,7 +462,7 @@ def send_telegram(text: str) -> None:
             "chat_id": CHAT_ID,
             "text": text,
             "parse_mode": "HTML",
-            "disable_web_page_preview": "false",
+            "disable_web_page_preview": "true",
         }
     ).encode("utf-8")
 
