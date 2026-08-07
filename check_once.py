@@ -84,7 +84,11 @@ def extract_location(text: str) -> str:
 
 def listing_id_from_url(site: str, url: str) -> str | None:
     if site == "MyHome.ge":
-        match = re.search(r"/real-estate/(\d+)(?:/|$)", url)
+        match = re.search(
+            r"/(?:udzravi-qoneba|real-estate)/(\d+)(?:[/?#]|$)",
+            url,
+            re.IGNORECASE,
+        )
     else:
         match = re.search(
             r"/real-estate/(?!l/)[^?#]*-(\d+)(?:[/?#]|$)",
