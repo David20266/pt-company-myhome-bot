@@ -546,14 +546,60 @@ def send_telegram(text: str) -> None:
             )
 
 
+def get_listing_image(url: str) -> str:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/151.0.0.0 Safari/537.36"
+            ),
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;"
+                "q=0.9,image/avif,image/webp,*/*;q=0.8"
+            ),
+            "Accept-Language": "ka,en-US;q=0.9,en;q=0.8",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            page_html = response.read().decode("utf-8", errors="ignore")
+    except Exception as exc:
+        print(f"Could not open listing page for image: {url}: {exc}")
+        return ""
+
+    patterns = [
+        r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
+        r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, page_html, re.IGNORECASE)
+
+        if match:
+            image_url = html.unescape(match.group(1)).strip()
+
+            if image_url.startswith("//"):
+                image_url = "https:" + image_url
+            elif image_url.startswith("/"):
+                image_url = urllib.parse.urljoin(url, image_url)
+
+            if image_url.startswith("http"):
+                return image_url
+
+    print(f"No listing-specific image found for {url}")
+    return ""
+
+
 def send_listing_to_telegram(item: dict[str, Any]) -> None:
     caption = format_listing(item)
-    image_url = (item.get("image_url") or "").strip()
+    image_url = get_listing_image(item["url"])
 
-    if image_url.startswith("//"):
-        image_url = "https:" + image_url
-
-    if image_url.startswith("http"):
+    if image_url:
         data = urllib.parse.urlencode(
             {
                 "chat_id": CHAT_ID,
