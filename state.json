@@ -1,10 +1,10 @@
 {
-  "initialized": false,
+  "initialized": true,
   "seen": {
     "myhome_rent": []
   },
   "max_ids": {
     "myhome_rent": 0
   },
-  "heartbeat_week": ""
+  "heartbeat_week": "2026-W32"
 }
