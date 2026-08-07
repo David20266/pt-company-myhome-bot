@@ -575,6 +575,7 @@ def get_listing_details(url: str) -> dict[str, str]:
         print(f"Could not open listing page: {url}: {exc}")
         return details
 
+    # ---------- Listing image ----------
     image_patterns = [
         r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
@@ -597,59 +598,115 @@ def get_listing_details(url: str) -> dict[str, str]:
                 details["image_url"] = image_url
                 break
 
-    # Read the location from listing-specific metadata first.
-    # This avoids using generic page/menu text and prevents a random
-    # Tbilisi district from being assigned to the listing.
-    metadata_parts: list[str] = []
-
-    meta_patterns = [
-        r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
-        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']',
-        r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']',
-        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']',
-        r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
-        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
-        r'<title[^>]*>(.*?)</title>',
+    # ---------- District / neighborhood ----------
+    known_locations = [
+        "საბურთალო",
+        "ვაკე",
+        "ლისის მიმდებარედ",
+        "ნუცუბიძის ფერდობი",
+        "დიდი დიღომი",
+        "დიღომი",
+        "ვერა",
+        "მთაწმინდა",
+        "სოლოლაკი",
+        "ჩუღურეთი",
+        "დიდუბე",
+        "ნაძალადევი",
+        "გლდანი",
+        "მუხიანი",
+        "ვარკეთილი",
+        "ისანი",
+        "სამგორი",
+        "ავლაბარი",
+        "ორთაჭალა",
+        "კრწანისი",
+        "ვაზისუბანი",
+        "ლილო",
+        "თბილისის ზღვა",
+        "ოქროყანა",
+        "წყნეთი",
+        "კოჯორი",
+        "ტაბახმელა",
     ]
 
-    for pattern in meta_patterns:
-        for match in re.finditer(
-            pattern,
-            page_html,
-            re.IGNORECASE | re.DOTALL,
-        ):
-            value = html.unescape(match.group(1))
-            value = re.sub(r"<[^>]+>", " ", value)
-            metadata_parts.append(normalize_text(value))
+    decoded_html = html.unescape(page_html)
 
-    metadata_text = " ".join(metadata_parts)
-    metadata_location = extract_location(metadata_text)
+    # 1. Prefer structured fields embedded by the listing page.
+    structured_patterns = [
+        r'"districtName"\s*:\s*"([^"]+)"',
+        r'"district_name"\s*:\s*"([^"]+)"',
+        r'"district"\s*:\s*\{[^{}]{0,500}?"name"\s*:\s*"([^"]+)"',
+        r'"urbanName"\s*:\s*"([^"]+)"',
+        r'"urban_name"\s*:\s*"([^"]+)"',
+        r'"locationName"\s*:\s*"([^"]+)"',
+    ]
 
-    if metadata_location != "თბილისი":
-        details["location"] = metadata_location
-    else:
-        # Fallback: look for district names in structured data / page source.
-        # We only accept a district if exactly one known district is found,
-        # which avoids choosing a district from navigation menus.
-        locations = [
-            "საბურთალო", "ვაკე", "ლისის მიმდებარედ",
-            "ნუცუბიძის ფერდობი", "დიდი დიღომი", "დიღომი",
-            "ვერა", "მთაწმინდა", "სოლოლაკი", "ჩუღურეთი",
-            "დიდუბე", "ნაძალადევი", "გლდანი", "მუხიანი",
-            "ვარკეთილი", "ისანი", "სამგორი", "ავლაბარი",
-            "ორთაჭალა", "კრწანისი", "ვაზისუბანი", "ლილო",
-            "თბილისის ზღვა", "ოქროყანა", "წყნეთი", "კოჯორი",
-            "ტაბახმელა",
+    for pattern in structured_patterns:
+        match = re.search(pattern, decoded_html, re.IGNORECASE | re.DOTALL)
+
+        if match:
+            candidate = normalize_text(match.group(1))
+
+            for location in known_locations:
+                if location.lower() in candidate.lower():
+                    details["location"] = location
+                    break
+
+        if details["location"]:
+            break
+
+    # 2. Look in listing-specific metadata (title/description), not menus.
+    if not details["location"]:
+        metadata_parts: list[str] = []
+
+        meta_patterns = [
+            r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']',
+            r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']',
+            r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
+            r'<title[^>]*>(.*?)</title>',
         ]
-        lowered_source = html.unescape(page_html).lower()
-        found = [
-            location
-            for location in locations
-            if location.lower() in lowered_source
-        ]
 
-        if len(found) == 1:
-            details["location"] = found[0]
+        for pattern in meta_patterns:
+            for match in re.finditer(
+                pattern,
+                decoded_html,
+                re.IGNORECASE | re.DOTALL,
+            ):
+                value = re.sub(r"<[^>]+>", " ", match.group(1))
+                metadata_parts.append(normalize_text(value))
+
+        metadata_text = " ".join(metadata_parts)
+
+        for location in known_locations:
+            if location.lower() in metadata_text.lower():
+                details["location"] = location
+                break
+
+    # 3. Search phrases typical of the listing itself:
+    #    "ბინა ნაძალადევში", "ნაძალადევი, ...", etc.
+    if not details["location"]:
+        compact_source = normalize_text(
+            re.sub(r"<[^>]+>", " ", decoded_html)
+        )
+
+        for location in known_locations:
+            loc = re.escape(location)
+
+            patterns = [
+                rf"(?:ბინა|სახლი|აგარაკი)\s+{loc}(?:ში|ზე)?",
+                rf"{loc}(?:ში|ზე)?\s*[,|·\-]",
+                rf"(?:უბანი|რაიონი)\s*[:\-]?\s*{loc}",
+            ]
+
+            if any(
+                re.search(pattern, compact_source, re.IGNORECASE)
+                for pattern in patterns
+            ):
+                details["location"] = location
+                break
 
     return details
 
