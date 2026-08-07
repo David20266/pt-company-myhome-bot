@@ -1,0 +1,10 @@
+{
+  "initialized": false,
+  "seen": {
+    "myhome_rent": []
+  },
+  "max_ids": {
+    "myhome_rent": 0
+  },
+  "heartbeat_week": ""
+}
