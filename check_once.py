@@ -848,34 +848,121 @@ def parse_myhome_posted_at(
     page_html: str,
     now_local: datetime,
 ) -> datetime | None:
+    """
+    Determine the original publication time as safely as possible.
+
+    Priority:
+    1) Structured creation/publication timestamp from the listing page.
+    2) Visible MyHome relative/explicit time as fallback.
+
+    Safety rule:
+    A visible "დღეს 00:00-ზე" is NOT trusted by itself because MyHome
+    can surface older/re-promoted listings with that display time.
+    If no structured timestamp exists and the visible time is exactly
+    00:00, return None so the listing is not sent as new.
+    """
+    decoded_html = html.unescape(page_html)
+
+    # ---------- 1. Structured/original publication time first ----------
+    structured_patterns = [
+        r'"createdAt"\s*:\s*"([^"]+)"',
+        r'"created_at"\s*:\s*"([^"]+)"',
+        r'"createDate"\s*:\s*"([^"]+)"',
+        r'"publishDate"\s*:\s*"([^"]+)"',
+        r'"publishedAt"\s*:\s*"([^"]+)"',
+        r'"published_at"\s*:\s*"([^"]+)"',
+    ]
+
+    for pattern in structured_patterns:
+        structured_match = re.search(
+            pattern,
+            decoded_html,
+            re.IGNORECASE,
+        )
+
+        if not structured_match:
+            continue
+
+        parsed = parse_iso_datetime(
+            structured_match.group(1)
+        )
+
+        if parsed is not None:
+            return parsed
+
+    numeric_patterns = [
+        r'"createdAt"\s*:\s*(\d{10,13})',
+        r'"created_at"\s*:\s*(\d{10,13})',
+        r'"createDate"\s*:\s*(\d{10,13})',
+        r'"publishDate"\s*:\s*(\d{10,13})',
+        r'"publishedAt"\s*:\s*(\d{10,13})',
+        r'"published_at"\s*:\s*(\d{10,13})',
+    ]
+
+    for pattern in numeric_patterns:
+        numeric_match = re.search(
+            pattern,
+            decoded_html,
+            re.IGNORECASE,
+        )
+
+        if not numeric_match:
+            continue
+
+        raw = int(numeric_match.group(1))
+
+        if raw > 10_000_000_000:
+            raw = raw / 1000
+
+        try:
+            return datetime.fromtimestamp(
+                raw,
+                tz=timezone.utc,
+            )
+        except (OSError, OverflowError, ValueError):
+            pass
+
+    # ---------- 2. Visible MyHome time as fallback ----------
     rendered = normalize_text(rendered_text)
 
-    match = re.search(
+    today_match = re.search(
         r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
         rendered,
         re.IGNORECASE,
     )
 
-    if match:
+    if today_match:
+        hour = int(today_match.group(1))
+        minute = int(today_match.group(2))
+
+        # Critical midnight protection:
+        # never trust visible "today 00:00" without structured creation time.
+        if hour == 0 and minute == 0:
+            print(
+                "Publication time is visible as today 00:00 "
+                "without a structured timestamp; treating as unverified"
+            )
+            return None
+
         return now_local.replace(
-            hour=int(match.group(1)),
-            minute=int(match.group(2)),
+            hour=hour,
+            minute=minute,
             second=0,
             microsecond=0,
         ).astimezone(timezone.utc)
 
-    match = re.search(
+    yesterday_match = re.search(
         r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
         rendered,
         re.IGNORECASE,
     )
 
-    if match:
+    if yesterday_match:
         yesterday = now_local - timedelta(days=1)
 
         return yesterday.replace(
-            hour=int(match.group(1)),
-            minute=int(match.group(2)),
+            hour=int(yesterday_match.group(1)),
+            minute=int(yesterday_match.group(2)),
             second=0,
             microsecond=0,
         ).astimezone(timezone.utc)
@@ -941,59 +1028,6 @@ def parse_myhome_posted_at(
             )
             return local_dt.astimezone(timezone.utc)
         except ValueError:
-            pass
-
-    decoded_html = html.unescape(page_html)
-
-    structured_patterns = [
-        r'"createdAt"\s*:\s*"([^"]+)"',
-        r'"created_at"\s*:\s*"([^"]+)"',
-        r'"createDate"\s*:\s*"([^"]+)"',
-        r'"publishDate"\s*:\s*"([^"]+)"',
-        r'"publishedAt"\s*:\s*"([^"]+)"',
-        r'"published_at"\s*:\s*"([^"]+)"',
-    ]
-
-    for pattern in structured_patterns:
-        structured_match = re.search(
-            pattern,
-            decoded_html,
-            re.IGNORECASE,
-        )
-
-        if structured_match:
-            parsed = parse_iso_datetime(structured_match.group(1))
-
-            if parsed is not None:
-                return parsed
-
-    numeric_patterns = [
-        r'"createdAt"\s*:\s*(\d{10,13})',
-        r'"created_at"\s*:\s*(\d{10,13})',
-        r'"createDate"\s*:\s*(\d{10,13})',
-        r'"publishDate"\s*:\s*(\d{10,13})',
-        r'"publishedAt"\s*:\s*(\d{10,13})',
-        r'"published_at"\s*:\s*(\d{10,13})',
-    ]
-
-    for pattern in numeric_patterns:
-        numeric_match = re.search(
-            pattern,
-            decoded_html,
-            re.IGNORECASE,
-        )
-
-        if not numeric_match:
-            continue
-
-        raw = int(numeric_match.group(1))
-
-        if raw > 10_000_000_000:
-            raw = raw / 1000
-
-        try:
-            return datetime.fromtimestamp(raw, tz=timezone.utc)
-        except (OSError, OverflowError, ValueError):
             pass
 
     return None
@@ -1284,7 +1318,7 @@ async def main() -> int:
         if listing_id not in seen:
             unseen_items.append(item)
             seen.append(listing_id)
-            state["seen"][key] = seen[-5000:]
+            state["seen"][key] = seen[-20000:]
 
         state["max_ids"][key] = max(
             int(state["max_ids"][key]),
