@@ -658,6 +658,145 @@ def send_telegram(text: str) -> bool:
     )
 
 
+
+def extract_exact_listing_location(
+    page_html: str,
+    url: str = "",
+    heading_text: str = "",
+) -> str:
+    """
+    Strict location extraction.
+
+    Trust only listing-specific sources:
+    1) listing heading (H1/H2/H3 captured from the detail page)
+    2) structured district/urban fields in page HTML
+    3) listing URL slug
+
+    Never scan the whole page body. If a location cannot be confirmed,
+    return "თბილისი" instead of guessing a district.
+    """
+    canonical_locations = [
+        ("ნუცუბიძის ფერდობი", ["ნუცუბიძის ფერდობ"]),
+        ("ლისის მიმდებარედ", ["ლისის მიმდებარ"]),
+        ("თბილისის ზღვა", ["თბილისის ზღვა"]),
+        ("დიდი დიღომი", ["დიდი დიღომ"]),
+        ("დიღმის მასივი", ["დიღმის მასივ", "დიღომის მასივ"]),
+        ("საბურთალო", ["საბურთალ"]),
+        ("ვაკე", ["ვაკე", "ვაკეში"]),
+        ("ვერა", ["ვერა", "ვერაზე"]),
+        ("მთაწმინდა", ["მთაწმინდ"]),
+        ("სოლოლაკი", ["სოლოლაკ"]),
+        ("ჩუღურეთი", ["ჩუღურეთ"]),
+        ("დიდუბე", ["დიდუბ"]),
+        ("ნაძალადევი", ["ნაძალადევ"]),
+        ("გლდანი", ["გლდან"]),
+        ("მუხიანი", ["მუხიან"]),
+        ("ვარკეთილი", ["ვარკეთილ"]),
+        ("ისანი", ["ისან"]),
+        ("სამგორი", ["სამგორ"]),
+        ("ავლაბარი", ["ავლაბარ"]),
+        ("ორთაჭალა", ["ორთაჭალ"]),
+        ("კრწანისი", ["კრწანის"]),
+        ("ვაზისუბანი", ["ვაზისუბან"]),
+        ("ლილო", ["ლილო"]),
+        ("ოქროყანა", ["ოქროყან"]),
+        ("წყნეთი", ["წყნეთ"]),
+        ("კოჯორი", ["კოჯორ"]),
+        ("ტაბახმელა", ["ტაბახმელ"]),
+        ("დიღომი", ["დიღომ"]),
+    ]
+
+    def match_canonical(value: str) -> str:
+        value = normalize_text(value).lower()
+
+        # Prefer more specific Dighomi variants before broad "დიღომი".
+        for canonical, stems in canonical_locations:
+            for stem in stems:
+                if stem.lower() in value:
+                    return canonical
+
+        return ""
+
+    # 1) Strongest source: the listing's own visible heading.
+    heading_location = match_canonical(heading_text)
+
+    if heading_location:
+        return heading_location
+
+    decoded_html = html.unescape(page_html)
+
+    # 2) Structured listing location fields.
+    structured_patterns = [
+        r'"districtName"\s*:\s*"([^"]+)"',
+        r'"district_name"\s*:\s*"([^"]+)"',
+        r'"district"\s*:\s*\{[^{}]{0,800}?"name"\s*:\s*"([^"]+)"',
+        r'"urbanName"\s*:\s*"([^"]+)"',
+        r'"urban_name"\s*:\s*"([^"]+)"',
+        r'"locationName"\s*:\s*"([^"]+)"',
+    ]
+
+    structured_candidates = []
+
+    for pattern in structured_patterns:
+        for match in re.finditer(
+            pattern,
+            decoded_html,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            location = match_canonical(match.group(1))
+
+            if location:
+                structured_candidates.append(location)
+
+    structured_candidates = list(dict.fromkeys(structured_candidates))
+
+    # Trust structured data only when it resolves to one location.
+    if len(structured_candidates) == 1:
+        return structured_candidates[0]
+
+    # 3) Listing URL slug, which is listing-specific.
+    lowered_url = urllib.parse.unquote(url).lower()
+
+    slug_locations = [
+        ("nutsubidzis-ferdob", "ნუცუბიძის ფერდობი"),
+        ("didi-dighom", "დიდი დიღომი"),
+        ("dighmis-masiv", "დიღმის მასივი"),
+        ("dighomis-masiv", "დიღმის მასივი"),
+        ("saburtalo", "საბურთალო"),
+        ("vake", "ვაკე"),
+        ("vera", "ვერა"),
+        ("mtatsminda", "მთაწმინდა"),
+        ("sololaki", "სოლოლაკი"),
+        ("chughureti", "ჩუღურეთი"),
+        ("didube", "დიდუბე"),
+        ("nadzaladevi", "ნაძალადევი"),
+        ("gldani", "გლდანი"),
+        ("mukhiani", "მუხიანი"),
+        ("mughiani", "მუხიანი"),
+        ("varketili", "ვარკეთილი"),
+        ("isani", "ისანი"),
+        ("samgori", "სამგორი"),
+        ("avlabari", "ავლაბარი"),
+        ("ortachala", "ორთაჭალა"),
+        ("krtsanisi", "კრწანისი"),
+        ("vazisubani", "ვაზისუბანი"),
+        ("lilo", "ლილო"),
+        ("oqroqana", "ოქროყანა"),
+        ("tsqneti", "წყნეთი"),
+        ("tskneti", "წყნეთი"),
+        ("kojori", "კოჯორი"),
+        ("tabakhmela", "ტაბახმელა"),
+        ("dighomi", "დიღომი"),
+    ]
+
+    for slug, location in slug_locations:
+        if slug in lowered_url:
+            return location
+
+    return "თბილისი"
+
+
+
 def get_listing_details(url: str) -> dict[str, str]:
     details = {
         "image_url": "",
@@ -711,114 +850,10 @@ def get_listing_details(url: str) -> dict[str, str]:
                 break
 
     # ---------- District / neighborhood ----------
-    known_locations = [
-        "საბურთალო",
-        "ვაკე",
-        "ლისის მიმდებარედ",
-        "ნუცუბიძის ფერდობი",
-        "დიდი დიღომი",
-        "დიღომი",
-        "ვერა",
-        "მთაწმინდა",
-        "სოლოლაკი",
-        "ჩუღურეთი",
-        "დიდუბე",
-        "ნაძალადევი",
-        "გლდანი",
-        "მუხიანი",
-        "ვარკეთილი",
-        "ისანი",
-        "სამგორი",
-        "ავლაბარი",
-        "ორთაჭალა",
-        "კრწანისი",
-        "ვაზისუბანი",
-        "ლილო",
-        "თბილისის ზღვა",
-        "ოქროყანა",
-        "წყნეთი",
-        "კოჯორი",
-        "ტაბახმელა",
-    ]
-
-    decoded_html = html.unescape(page_html)
-
-    # 1. Prefer structured fields embedded by the listing page.
-    structured_patterns = [
-        r'"districtName"\s*:\s*"([^"]+)"',
-        r'"district_name"\s*:\s*"([^"]+)"',
-        r'"district"\s*:\s*\{[^{}]{0,500}?"name"\s*:\s*"([^"]+)"',
-        r'"urbanName"\s*:\s*"([^"]+)"',
-        r'"urban_name"\s*:\s*"([^"]+)"',
-        r'"locationName"\s*:\s*"([^"]+)"',
-    ]
-
-    for pattern in structured_patterns:
-        match = re.search(pattern, decoded_html, re.IGNORECASE | re.DOTALL)
-
-        if match:
-            candidate = normalize_text(match.group(1))
-
-            for location in known_locations:
-                if location.lower() in candidate.lower():
-                    details["location"] = location
-                    break
-
-        if details["location"]:
-            break
-
-    # 2. Look in listing-specific metadata (title/description), not menus.
-    if not details["location"]:
-        metadata_parts: list[str] = []
-
-        meta_patterns = [
-            r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
-            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']',
-            r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']',
-            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:description["\']',
-            r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
-            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
-            r'<title[^>]*>(.*?)</title>',
-        ]
-
-        for pattern in meta_patterns:
-            for match in re.finditer(
-                pattern,
-                decoded_html,
-                re.IGNORECASE | re.DOTALL,
-            ):
-                value = re.sub(r"<[^>]+>", " ", match.group(1))
-                metadata_parts.append(normalize_text(value))
-
-        metadata_text = " ".join(metadata_parts)
-
-        for location in known_locations:
-            if location.lower() in metadata_text.lower():
-                details["location"] = location
-                break
-
-    # 3. Search phrases typical of the listing itself:
-    #    "ბინა ნაძალადევში", "ნაძალადევი, ...", etc.
-    if not details["location"]:
-        compact_source = normalize_text(
-            re.sub(r"<[^>]+>", " ", decoded_html)
-        )
-
-        for location in known_locations:
-            loc = re.escape(location)
-
-            patterns = [
-                rf"(?:ბინა|სახლი|აგარაკი)\s+{loc}(?:ში|ზე)?",
-                rf"{loc}(?:ში|ზე)?\s*[,|·\-]",
-                rf"(?:უბანი|რაიონი)\s*[:\-]?\s*{loc}",
-            ]
-
-            if any(
-                re.search(pattern, compact_source, re.IGNORECASE)
-                for pattern in patterns
-            ):
-                details["location"] = location
-                break
+    details["location"] = extract_exact_listing_location(
+        page_html,
+        url,
+    )
 
     return details
 
@@ -1098,10 +1133,40 @@ async def enrich_unseen_items(
                     else ""
                 )
 
-                rendered_location = extract_location(rendered_text)
+                heading_parts: list[str] = []
 
-                if rendered_location != "თბილისი":
-                    item["location"] = rendered_location
+                for selector in ("h1", "h2", "h3"):
+                    locator = page.locator(selector)
+
+                    try:
+                        count = min(await locator.count(), 5)
+                    except Exception:
+                        count = 0
+
+                    for index in range(count):
+                        try:
+                            value = normalize_text(
+                                await locator.nth(index).inner_text()
+                            )
+                        except Exception:
+                            continue
+
+                        if (
+                            value
+                            and (
+                                "ქირავდება" in value
+                                or "იყიდება" in value
+                            )
+                        ):
+                            heading_parts.append(value)
+
+                listing_heading = " ".join(heading_parts)
+
+                item["location"] = extract_exact_listing_location(
+                    page_html,
+                    item["url"],
+                    listing_heading,
+                )
 
                 og_image = await page.locator(
                     'meta[property="og:image"]'
