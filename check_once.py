@@ -6,9 +6,10 @@ import re
 import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import async_playwright
@@ -19,6 +20,8 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
 _NBG_RATES_CACHE: dict[str, float] | None = None
+GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
+FRESHNESS_GRACE_MINUTES = 5
 
 SOURCES = [
     {
@@ -477,6 +480,7 @@ def default_state() -> dict[str, Any]:
             for source in SOURCES
         },
         "heartbeat_week": "",
+        "last_successful_scan_at": "",
     }
 
 
@@ -711,15 +715,356 @@ def get_listing_details(url: str) -> dict[str, str]:
     return details
 
 
-def send_listing_to_telegram(item: dict[str, Any]) -> None:
-    details = get_listing_details(item["url"])
 
-    if details["location"]:
-        item = dict(item)
-        item["location"] = details["location"]
+def parse_iso_datetime(value: str) -> datetime | None:
+    value = normalize_text(value)
+
+    if not value:
+        return None
+
+    value = value.replace("Z", "+00:00")
+
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=GEORGIA_TZ)
+
+    return parsed.astimezone(timezone.utc)
+
+
+def parse_myhome_posted_at(
+    rendered_text: str,
+    page_html: str,
+    now_local: datetime,
+) -> datetime | None:
+    rendered = normalize_text(rendered_text)
+
+    match = re.search(
+        r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if match:
+        return now_local.replace(
+            hour=int(match.group(1)),
+            minute=int(match.group(2)),
+            second=0,
+            microsecond=0,
+        ).astimezone(timezone.utc)
+
+    match = re.search(
+        r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if match:
+        yesterday = now_local - timedelta(days=1)
+
+        return yesterday.replace(
+            hour=int(match.group(1)),
+            minute=int(match.group(2)),
+            second=0,
+            microsecond=0,
+        ).astimezone(timezone.utc)
+
+    months = {
+        "იანვარი": 1,
+        "იანვარს": 1,
+        "თებერვალი": 2,
+        "თებერვალს": 2,
+        "მარტი": 3,
+        "მარტს": 3,
+        "აპრილი": 4,
+        "აპრილს": 4,
+        "მაისი": 5,
+        "მაისს": 5,
+        "ივნისი": 6,
+        "ივნისს": 6,
+        "ივლისი": 7,
+        "ივლისს": 7,
+        "აგვისტო": 8,
+        "აგვისტოს": 8,
+        "სექტემბერი": 9,
+        "სექტემბერს": 9,
+        "ოქტომბერი": 10,
+        "ოქტომბერს": 10,
+        "ნოემბერი": 11,
+        "ნოემბერს": 11,
+        "დეკემბერი": 12,
+        "დეკემბერს": 12,
+    }
+
+    month_pattern = "|".join(
+        sorted(
+            (re.escape(month) for month in months),
+            key=len,
+            reverse=True,
+        )
+    )
+
+    explicit_match = re.search(
+        rf"(?:^|\s)(\d{{1,2}})\s+({month_pattern})"
+        rf"(?:\s+(\d{{4}}))?"
+        rf"(?:\s+(\d{{1,2}}):(\d{{2}})(?:-?ზე)?)?",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if explicit_match:
+        year = (
+            int(explicit_match.group(3))
+            if explicit_match.group(3)
+            else now_local.year
+        )
+
+        try:
+            local_dt = datetime(
+                year,
+                months[explicit_match.group(2).lower()],
+                int(explicit_match.group(1)),
+                int(explicit_match.group(4) or "0"),
+                int(explicit_match.group(5) or "0"),
+                tzinfo=GEORGIA_TZ,
+            )
+            return local_dt.astimezone(timezone.utc)
+        except ValueError:
+            pass
+
+    decoded_html = html.unescape(page_html)
+
+    structured_patterns = [
+        r'"createdAt"\s*:\s*"([^"]+)"',
+        r'"created_at"\s*:\s*"([^"]+)"',
+        r'"createDate"\s*:\s*"([^"]+)"',
+        r'"publishDate"\s*:\s*"([^"]+)"',
+        r'"publishedAt"\s*:\s*"([^"]+)"',
+        r'"published_at"\s*:\s*"([^"]+)"',
+    ]
+
+    for pattern in structured_patterns:
+        structured_match = re.search(
+            pattern,
+            decoded_html,
+            re.IGNORECASE,
+        )
+
+        if structured_match:
+            parsed = parse_iso_datetime(structured_match.group(1))
+
+            if parsed is not None:
+                return parsed
+
+    numeric_patterns = [
+        r'"createdAt"\s*:\s*(\d{10,13})',
+        r'"created_at"\s*:\s*(\d{10,13})',
+        r'"createDate"\s*:\s*(\d{10,13})',
+        r'"publishDate"\s*:\s*(\d{10,13})',
+        r'"publishedAt"\s*:\s*(\d{10,13})',
+        r'"published_at"\s*:\s*(\d{10,13})',
+    ]
+
+    for pattern in numeric_patterns:
+        numeric_match = re.search(
+            pattern,
+            decoded_html,
+            re.IGNORECASE,
+        )
+
+        if not numeric_match:
+            continue
+
+        raw = int(numeric_match.group(1))
+
+        if raw > 10_000_000_000:
+            raw = raw / 1000
+
+        try:
+            return datetime.fromtimestamp(raw, tz=timezone.utc)
+        except (OSError, OverflowError, ValueError):
+            pass
+
+    return None
+
+
+async def enrich_unseen_items(
+    items: list[dict[str, Any]],
+) -> None:
+    if not items:
+        return
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-blink-features=AutomationControlled",
+            ],
+        )
+
+        context = await browser.new_context(
+            locale="ka-GE",
+            viewport={
+                "width": 1440,
+                "height": 1200,
+            },
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/151.0.0.0 Safari/537.36"
+            ),
+        )
+
+        await context.add_init_script(
+            "Object.defineProperty("
+            "navigator, 'webdriver', "
+            "{get: () => undefined})"
+        )
+
+        for item in items:
+            page = await context.new_page()
+
+            try:
+                await page.goto(
+                    item["url"],
+                    wait_until="domcontentloaded",
+                    timeout=90_000,
+                )
+
+                await page.wait_for_timeout(2_500)
+
+                rendered_text = normalize_text(
+                    await page.locator("body").inner_text()
+                )
+                page_html = await page.content()
+                now_local = datetime.now(GEORGIA_TZ)
+
+                posted_at = parse_myhome_posted_at(
+                    rendered_text,
+                    page_html,
+                    now_local,
+                )
+
+                item["posted_at_utc"] = (
+                    posted_at.isoformat()
+                    if posted_at is not None
+                    else ""
+                )
+
+                rendered_location = extract_location(rendered_text)
+
+                if rendered_location != "თბილისი":
+                    item["location"] = rendered_location
+
+                og_image = await page.locator(
+                    'meta[property="og:image"]'
+                ).get_attribute("content")
+
+                if not og_image:
+                    og_image = await page.locator(
+                        'meta[name="twitter:image"]'
+                    ).get_attribute("content")
+
+                if og_image:
+                    og_image = html.unescape(og_image).strip()
+
+                    if og_image.startswith("//"):
+                        og_image = "https:" + og_image
+                    elif og_image.startswith("/"):
+                        og_image = urllib.parse.urljoin(
+                            item["url"],
+                            og_image,
+                        )
+
+                    if og_image.startswith("http"):
+                        item["detail_image_url"] = og_image
+
+                print(
+                    f"Detail {item['listing_id']}: "
+                    f"posted_at="
+                    f"{item.get('posted_at_utc') or 'UNKNOWN'}, "
+                    f"location={item.get('location')}"
+                )
+
+            except Exception as exc:
+                item["posted_at_utc"] = ""
+
+                print(
+                    f"Detail check failed for "
+                    f"{item['listing_id']}: "
+                    f"{type(exc).__name__}: {exc}"
+                )
+
+            finally:
+                await page.close()
+
+        await context.close()
+        await browser.close()
+
+
+def is_fresh_listing(
+    item: dict[str, Any],
+    previous_scan_at: datetime,
+    run_started_at: datetime,
+) -> bool:
+    posted_raw = item.get("posted_at_utc", "")
+
+    if not posted_raw:
+        print(
+            f"SKIP {item['listing_id']}: "
+            "publication time could not be verified"
+        )
+        return False
+
+    posted_at = parse_iso_datetime(posted_raw)
+
+    if posted_at is None:
+        print(
+            f"SKIP {item['listing_id']}: "
+            f"invalid publication timestamp {posted_raw!r}"
+        )
+        return False
+
+    lower_bound = previous_scan_at - timedelta(
+        minutes=FRESHNESS_GRACE_MINUTES
+    )
+    upper_bound = run_started_at + timedelta(
+        minutes=FRESHNESS_GRACE_MINUTES
+    )
+
+    fresh = lower_bound <= posted_at <= upper_bound
+
+    if not fresh:
+        print(
+            f"SKIP {item['listing_id']}: old listing; "
+            f"posted={posted_at.isoformat()}, "
+            f"window={lower_bound.isoformat()}.."
+            f"{upper_bound.isoformat()}"
+        )
+
+    return fresh
+
+
+
+def send_listing_to_telegram(item: dict[str, Any]) -> None:
+    item = dict(item)
+
+    image_url = (item.get("detail_image_url") or "").strip()
+
+    if not image_url:
+        details = get_listing_details(item["url"])
+
+        if details["location"] and item.get("location") == "თბილისი":
+            item["location"] = details["location"]
+
+        image_url = details["image_url"]
 
     caption = format_listing(item)
-    image_url = details["image_url"]
 
     if image_url:
         data = urllib.parse.urlencode(
@@ -787,6 +1132,7 @@ async def main() -> int:
         )
         return 2
 
+    run_started_at = datetime.now(timezone.utc)
     state = load_state()
     listings, errors = await scrape_all_sources()
 
@@ -799,8 +1145,14 @@ async def main() -> int:
     if not listings and errors:
         return 1
 
-    new_items: list[dict[str, Any]] = []
     initialized = bool(state["initialized"])
+    previous_scan_at = parse_iso_datetime(
+        normalize_text(
+            state.get("last_successful_scan_at", "")
+        )
+    )
+
+    unseen_items: list[dict[str, Any]] = []
 
     for item in listings:
         key = item["source_key"]
@@ -808,9 +1160,7 @@ async def main() -> int:
         seen = state["seen"][key]
 
         if listing_id not in seen:
-            if initialized:
-                new_items.append(item)
-
+            unseen_items.append(item)
             seen.append(listing_id)
             state["seen"][key] = seen[-5000:]
 
@@ -818,6 +1168,8 @@ async def main() -> int:
             int(state["max_ids"][key]),
             int(listing_id),
         )
+
+    new_items: list[dict[str, Any]] = []
 
     if not initialized:
         state["initialized"] = True
@@ -831,23 +1183,51 @@ async def main() -> int:
             "მოვა მხოლოდ ახალი განცხადებების დამატებისას."
         )
 
+        print(
+            f"Initial baseline: stored "
+            f"{len(unseen_items)} currently visible listings"
+        )
+
+    elif previous_scan_at is None:
+        print(
+            "Freshness baseline created. "
+            f"Stored {len(unseen_items)} unseen listings "
+            "without notifications."
+        )
+
     else:
+        await enrich_unseen_items(unseen_items)
+
+        for item in unseen_items:
+            if is_fresh_listing(
+                item,
+                previous_scan_at,
+                run_started_at,
+            ):
+                new_items.append(item)
+
         new_items.sort(
-            key=lambda item: int(item["listing_id"])
+            key=lambda item: (
+                parse_iso_datetime(
+                    item.get("posted_at_utc", "")
+                )
+                or datetime.min.replace(tzinfo=timezone.utc),
+                int(item["listing_id"]),
+            )
         )
 
         for item in new_items:
             send_listing_to_telegram(item)
 
-    state["heartbeat_week"] = datetime.now(
-        timezone.utc
-    ).strftime("%G-W%V")
+    state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
+    state["last_successful_scan_at"] = run_started_at.isoformat()
 
     save_state(state)
 
     print(
         f"Found {len(listings)} listings; "
-        f"sent {len(new_items)} notifications"
+        f"unseen {len(unseen_items)}; "
+        f"sent {len(new_items)} verified-new notifications"
     )
 
     return 0
