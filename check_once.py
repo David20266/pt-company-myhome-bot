@@ -24,6 +24,8 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 _NBG_RATES_CACHE: dict[str, float] | None = None
 GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
 FRESHNESS_GRACE_MINUTES = 5
+# Hard safety gate: never send a listing older than this at run time.
+MAX_LISTING_AGE_MINUTES = 35
 
 TELEGRAM_MIN_INTERVAL_SECONDS = 3.2
 TELEGRAM_MAX_ATTEMPTS = 6
@@ -1136,9 +1138,23 @@ def is_fresh_listing(
         )
         return False
 
-    lower_bound = previous_scan_at - timedelta(
+    # Gate A: normal incremental scan window.
+    scan_lower_bound = previous_scan_at - timedelta(
         minutes=FRESHNESS_GRACE_MINUTES
     )
+
+    # Gate B: absolute safety window.
+    # Even if previous successful state is stale because earlier runs failed,
+    # an hours-old / yesterday listing can NEVER be sent as new.
+    absolute_lower_bound = run_started_at - timedelta(
+        minutes=MAX_LISTING_AGE_MINUTES
+    )
+
+    lower_bound = max(
+        scan_lower_bound,
+        absolute_lower_bound,
+    )
+
     upper_bound = run_started_at + timedelta(
         minutes=FRESHNESS_GRACE_MINUTES
     )
@@ -1146,15 +1162,19 @@ def is_fresh_listing(
     fresh = lower_bound <= posted_at <= upper_bound
 
     if not fresh:
+        age_minutes = (
+            run_started_at - posted_at
+        ).total_seconds() / 60
+
         print(
-            f"SKIP {item['listing_id']}: old listing; "
+            f"SKIP {item['listing_id']}: not fresh; "
             f"posted={posted_at.isoformat()}, "
-            f"window={lower_bound.isoformat()}.."
+            f"age={age_minutes:.1f}min, "
+            f"allowed={lower_bound.isoformat()}.."
             f"{upper_bound.isoformat()}"
         )
 
     return fresh
-
 
 
 def send_listing_to_telegram(
