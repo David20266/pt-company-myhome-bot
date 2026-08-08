@@ -4,8 +4,10 @@ import json
 import os
 import re
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -22,6 +24,10 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 _NBG_RATES_CACHE: dict[str, float] | None = None
 GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
 FRESHNESS_GRACE_MINUTES = 5
+
+TELEGRAM_MIN_INTERVAL_SECONDS = 3.2
+TELEGRAM_MAX_ATTEMPTS = 6
+_LAST_TELEGRAM_SEND_MONOTONIC = 0.0
 
 SOURCES = [
     {
@@ -524,30 +530,130 @@ def save_state(state: dict[str, Any]) -> None:
     )
 
 
-def send_telegram(text: str) -> None:
-    data = urllib.parse.urlencode(
+def telegram_api_post(
+    method: str,
+    payload: dict[str, str],
+    *,
+    max_attempts: int = TELEGRAM_MAX_ATTEMPTS,
+) -> bool:
+    global _LAST_TELEGRAM_SEND_MONOTONIC
+
+    endpoint = f"https://api.telegram.org/bot{TOKEN}/{method}"
+
+    for attempt in range(1, max_attempts + 1):
+        elapsed = time.monotonic() - _LAST_TELEGRAM_SEND_MONOTONIC
+        delay = TELEGRAM_MIN_INTERVAL_SECONDS - elapsed
+
+        if delay > 0:
+            time.sleep(delay)
+
+        request = urllib.request.Request(
+            endpoint,
+            data=urllib.parse.urlencode(payload).encode("utf-8"),
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(
+                request,
+                timeout=45,
+            ) as response:
+                body = response.read().decode(
+                    "utf-8",
+                    errors="replace",
+                )
+
+                if response.status != 200:
+                    print(
+                        f"Telegram {method} returned "
+                        f"HTTP {response.status}: {body}"
+                    )
+                    return False
+
+                _LAST_TELEGRAM_SEND_MONOTONIC = time.monotonic()
+                return True
+
+        except urllib.error.HTTPError as exc:
+            error_body = exc.read().decode(
+                "utf-8",
+                errors="replace",
+            )
+
+            if exc.code == 429:
+                retry_after = 5
+
+                try:
+                    error_json = json.loads(error_body)
+                    retry_after = int(
+                        error_json
+                        .get("parameters", {})
+                        .get("retry_after", retry_after)
+                    )
+                except (
+                    json.JSONDecodeError,
+                    TypeError,
+                    ValueError,
+                ):
+                    header_value = exc.headers.get("Retry-After")
+
+                    if header_value:
+                        try:
+                            retry_after = int(header_value)
+                        except ValueError:
+                            pass
+
+                wait_seconds = max(
+                    retry_after + 1,
+                    int(TELEGRAM_MIN_INTERVAL_SECONDS) + 1,
+                )
+
+                print(
+                    f"Telegram 429 on {method}; "
+                    f"waiting {wait_seconds}s "
+                    f"(attempt {attempt}/{max_attempts})"
+                )
+                time.sleep(wait_seconds)
+                continue
+
+            print(
+                f"Telegram {method} HTTP {exc.code}: "
+                f"{error_body}"
+            )
+            return False
+
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            OSError,
+        ) as exc:
+            if attempt >= max_attempts:
+                print(
+                    f"Telegram {method} failed after "
+                    f"{max_attempts} attempts: {exc}"
+                )
+                return False
+
+            backoff = min(2 ** attempt, 20)
+
+            print(
+                f"Telegram {method} temporary error: "
+                f"{exc}; retrying in {backoff}s"
+            )
+            time.sleep(backoff)
+
+    return False
+
+
+def send_telegram(text: str) -> bool:
+    return telegram_api_post(
+        "sendMessage",
         {
             "chat_id": CHAT_ID,
             "text": text,
             "parse_mode": "HTML",
             "disable_web_page_preview": "true",
-        }
-    ).encode("utf-8")
-
-    request = urllib.request.Request(
-        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data=data,
-        method="POST",
+        },
     )
-
-    with urllib.request.urlopen(
-        request,
-        timeout=30,
-    ) as response:
-        if response.status != 200:
-            raise RuntimeError(
-                f"Telegram returned HTTP {response.status}"
-            )
 
 
 def get_listing_details(url: str) -> dict[str, str]:
@@ -1051,15 +1157,22 @@ def is_fresh_listing(
 
 
 
-def send_listing_to_telegram(item: dict[str, Any]) -> None:
+def send_listing_to_telegram(
+    item: dict[str, Any],
+) -> bool:
     item = dict(item)
 
-    image_url = (item.get("detail_image_url") or "").strip()
+    image_url = (
+        item.get("detail_image_url") or ""
+    ).strip()
 
     if not image_url:
         details = get_listing_details(item["url"])
 
-        if details["location"] and item.get("location") == "თბილისი":
+        if (
+            details["location"]
+            and item.get("location") == "თბილისი"
+        ):
             item["location"] = details["location"]
 
         image_url = details["image_url"]
@@ -1067,35 +1180,24 @@ def send_listing_to_telegram(item: dict[str, Any]) -> None:
     caption = format_listing(item)
 
     if image_url:
-        data = urllib.parse.urlencode(
+        if telegram_api_post(
+            "sendPhoto",
             {
                 "chat_id": CHAT_ID,
                 "photo": image_url,
                 "caption": caption,
                 "parse_mode": "HTML",
-            }
-        ).encode("utf-8")
+            },
+        ):
+            return True
 
-        request = urllib.request.Request(
-            f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
-            data=data,
-            method="POST",
+        print(
+            f"Photo delivery failed for "
+            f"{item['listing_id']}; "
+            "trying text-only fallback"
         )
 
-        try:
-            with urllib.request.urlopen(
-                request,
-                timeout=30,
-            ) as response:
-                if response.status == 200:
-                    return
-        except Exception as exc:
-            print(
-                f"Photo send failed for {item['listing_id']}: {exc}; "
-                "falling back to text message"
-            )
-
-    send_telegram(caption)
+    return send_telegram(caption)
 
 
 def format_listing(item: dict[str, Any]) -> str:
@@ -1216,8 +1318,32 @@ async def main() -> int:
             )
         )
 
+        sent_count = 0
+        failed_items: list[dict[str, Any]] = []
+
         for item in new_items:
-            send_listing_to_telegram(item)
+            if send_listing_to_telegram(item):
+                sent_count += 1
+            else:
+                failed_items.append(item)
+                print(
+                    f"Telegram delivery failed for "
+                    f"{item['listing_id']}; "
+                    "it will be retried on the next run"
+                )
+
+        for item in failed_items:
+            key = item["source_key"]
+            listing_id = item["listing_id"]
+
+            state["seen"][key] = [
+                seen_id
+                for seen_id in state["seen"][key]
+                if seen_id != listing_id
+            ]
+
+    if not initialized or previous_scan_at is None:
+        sent_count = 0
 
     state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
     state["last_successful_scan_at"] = run_started_at.isoformat()
@@ -1227,7 +1353,8 @@ async def main() -> int:
     print(
         f"Found {len(listings)} listings; "
         f"unseen {len(unseen_items)}; "
-        f"sent {len(new_items)} verified-new notifications"
+        f"verified-new {len(new_items)}; "
+        f"sent {sent_count} notifications"
     )
 
     return 0
