@@ -115,7 +115,6 @@ def parse_price_number(raw: str) -> float | None:
     if not cleaned:
         return None
 
-    # MyHome commonly formats thousands as 1,400 or 1 400.
     if re.fullmatch(r"\d{1,3}(?:,\d{3})+", cleaned):
         cleaned = cleaned.replace(",", "")
     elif re.fullmatch(r"\d{1,3}(?:\.\d{3})+", cleaned):
@@ -240,25 +239,12 @@ def listing_id_from_url(site: str, url: str) -> str | None:
 
 def page_url(url: str, page_number: int) -> str:
     parts = urllib.parse.urlsplit(url)
-    query = urllib.parse.parse_qsl(
-        parts.query,
-        keep_blank_values=True,
-    )
-    query = [
-        (key, value)
-        for key, value in query
-        if key != "page"
-    ]
+    query = urllib.parse.parse_qsl(parts.query, keep_blank_values=True)
+    query = [(key, value) for key, value in query if key != "page"]
     query.append(("page", str(page_number)))
 
     return urllib.parse.urlunsplit(
-        (
-            parts.scheme,
-            parts.netloc,
-            parts.path,
-            urllib.parse.urlencode(query),
-            parts.fragment,
-        )
+        (parts.scheme, parts.netloc, parts.path, urllib.parse.urlencode(query), parts.fragment)
     )
 
 
@@ -266,62 +252,32 @@ async def collect_page_links(page: Any) -> list[dict[str, str]]:
     return await page.evaluate(
         r"""
         () => {
-          const clean = (value) =>
-            (value || '').replace(/\s+/g, ' ').trim();
-
+          const clean = (value) => (value || '').replace(/\s+/g, ' ').trim();
           const results = [];
-
           for (const anchor of document.querySelectorAll('a[href]')) {
             const href = anchor.href;
-
-            let text = clean(
-              anchor.innerText ||
-              anchor.getAttribute('aria-label') ||
-              anchor.title
-            );
-
+            let text = clean(anchor.innerText || anchor.getAttribute('aria-label') || anchor.title);
             let node = anchor;
-
-            for (
-              let i = 0;
-              i < 6 && node && node.parentElement;
-              i++
-            ) {
+            for (let i = 0; i < 6 && node && node.parentElement; i++) {
               node = node.parentElement;
-
               const candidate = clean(node.innerText);
-              const hasMarker =
-                /m²|m2|room|ოთახ|комнат/i.test(candidate);
-
-              if (
-                hasMarker &&
-                candidate.length >= 25 &&
-                candidate.length <= 1200
-              ) {
+              const hasMarker = /m²|m2|room|ოთახ|комнат/i.test(candidate);
+              if (hasMarker && candidate.length >= 25 && candidate.length <= 1200) {
                 text = candidate;
                 break;
               }
             }
-
             let imageUrl = "";
-
             const imageNode =
               (node && node.querySelector && node.querySelector("img")) ||
               (anchor.querySelector && anchor.querySelector("img"));
-
             if (imageNode) {
-              imageUrl = (
-                imageNode.currentSrc ||
-                imageNode.src ||
+              imageUrl = imageNode.currentSrc || imageNode.src ||
                 imageNode.getAttribute("data-src") ||
-                imageNode.getAttribute("data-lazy-src") ||
-                ""
-              );
+                imageNode.getAttribute("data-lazy-src") || "";
             }
-
             results.push({href, text, imageUrl});
           }
-
           return results;
         }
         """
@@ -331,115 +287,64 @@ async def collect_page_links(page: Any) -> list[dict[str, str]]:
 async def scrape_all_sources():
     found: dict[tuple[str, str], dict[str, Any]] = {}
     errors: list[str] = []
-
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-blink-features=AutomationControlled",
-            ],
+            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"],
         )
-
         context = await browser.new_context(
             locale="en-US",
-            viewport={
-                "width": 1440,
-                "height": 1200,
-            },
+            viewport={"width": 1440, "height": 1200},
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/151.0.0.0 Safari/537.36"
             ),
         )
-
         await context.add_init_script(
-            "Object.defineProperty("
-            "navigator, 'webdriver', "
-            "{get: () => undefined})"
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
         )
 
         for source in SOURCES:
             page_count = int(source.get("pages", 1))
-
             for page_number in range(1, page_count + 1):
                 page = await context.new_page()
-
                 try:
-                    print(
-                        f"Checking {source['key']} "
-                        f"page {page_number}"
-                    )
-
+                    print(f"Checking {source['key']} page {page_number}")
                     await page.goto(
-                        page_url(
-                            source["url"],
-                            page_number,
-                        ),
+                        page_url(source["url"], page_number),
                         wait_until="domcontentloaded",
                         timeout=90_000,
                     )
-
                     await page.wait_for_timeout(5_000)
-
                     for _ in range(3):
                         await page.mouse.wheel(0, 1600)
                         await page.wait_for_timeout(700)
 
                     candidates = await collect_page_links(page)
-
                     page_listing_ids = {
                         listing_id_from_url(source["site"], item["href"])
                         for item in candidates
                     }
                     page_listing_ids.discard(None)
-
-                    print(
-                        f"{source['key']} page {page_number}: "
-                        f"{len(page_listing_ids)} listing IDs detected"
-                    )
+                    print(f"{source['key']} page {page_number}: {len(page_listing_ids)} listing IDs detected")
 
                     for candidate in candidates:
                         url = candidate["href"].split("#", 1)[0]
-
-                        listing_id = listing_id_from_url(
-                            source["site"],
-                            url,
-                        )
-
+                        listing_id = listing_id_from_url(source["site"], url)
                         if not listing_id:
                             continue
-
                         text = normalize_text(candidate["text"])
-
                         if not is_target_location(text, url):
                             continue
-
                         rooms = extract_room_count(text, url)
-
                         room_filter = source.get("rooms")
-
-                        if (
-                            room_filter
-                            and rooms not in room_filter
-                        ):
+                        if room_filter and rooms not in room_filter:
                             continue
-
-                        key = (
-                            source["key"],
-                            listing_id,
-                        )
-
+                        key = (source["key"], listing_id)
                         current = found.get(key)
-
-                        if (
-                            current
-                            and len(current["summary"]) >= len(text)
-                        ):
+                        if current and len(current["summary"]) >= len(text):
                             continue
-
                         found[key] = {
                             "source_key": source["key"],
                             "site": source["site"],
@@ -453,40 +358,22 @@ async def scrape_all_sources():
                             "image_url": candidate.get("imageUrl", ""),
                             "summary": text[:700],
                         }
-
                 except PlaywrightTimeoutError:
-                    errors.append(
-                        f"{source['key']} "
-                        f"page {page_number}: timeout"
-                    )
-
+                    errors.append(f"{source['key']} page {page_number}: timeout")
                 except Exception as exc:
-                    errors.append(
-                        f"{source['key']} "
-                        f"page {page_number}: "
-                        f"{type(exc).__name__}: {exc}"
-                    )
-
+                    errors.append(f"{source['key']} page {page_number}: {type(exc).__name__}: {exc}")
                 finally:
                     await page.close()
-
         await context.close()
         await browser.close()
-
     return list(found.values()), errors
 
 
 def default_state() -> dict[str, Any]:
     return {
         "initialized": False,
-        "seen": {
-            source["key"]: []
-            for source in SOURCES
-        },
-        "max_ids": {
-            source["key"]: 0
-            for source in SOURCES
-        },
+        "seen": {source["key"]: [] for source in SOURCES},
+        "max_ids": {source["key"]: 0 for source in SOURCES},
         "heartbeat_week": "",
         "last_successful_scan_at": "",
     }
@@ -495,186 +382,85 @@ def default_state() -> dict[str, Any]:
 def load_state() -> dict[str, Any]:
     if not STATE_PATH.exists():
         return default_state()
-
     try:
-        state = json.loads(
-            STATE_PATH.read_text(encoding="utf-8")
-        )
+        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return default_state()
-
     template = default_state()
-
     for key, value in template.items():
         state.setdefault(key, value)
-
     for source in SOURCES:
-        state["seen"].setdefault(
-            source["key"],
-            [],
-        )
-        state["max_ids"].setdefault(
-            source["key"],
-            0,
-        )
-
+        state["seen"].setdefault(source["key"], [])
+        state["max_ids"].setdefault(source["key"], 0)
     return state
 
 
 def save_state(state: dict[str, Any]) -> None:
     STATE_PATH.write_text(
-        json.dumps(
-            state,
-            ensure_ascii=False,
-            indent=2,
-        ) + "\n",
+        json.dumps(state, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
 
-def telegram_api_post(
-    method: str,
-    payload: dict[str, str],
-    *,
-    max_attempts: int = TELEGRAM_MAX_ATTEMPTS,
-) -> bool:
+def telegram_api_post(method: str, payload: dict[str, str], *, max_attempts: int = TELEGRAM_MAX_ATTEMPTS) -> bool:
     global _LAST_TELEGRAM_SEND_MONOTONIC
-
     endpoint = f"https://api.telegram.org/bot{TOKEN}/{method}"
-
     for attempt in range(1, max_attempts + 1):
         elapsed = time.monotonic() - _LAST_TELEGRAM_SEND_MONOTONIC
         delay = TELEGRAM_MIN_INTERVAL_SECONDS - elapsed
-
         if delay > 0:
             time.sleep(delay)
-
         request = urllib.request.Request(
             endpoint,
             data=urllib.parse.urlencode(payload).encode("utf-8"),
             method="POST",
         )
-
         try:
-            with urllib.request.urlopen(
-                request,
-                timeout=45,
-            ) as response:
-                body = response.read().decode(
-                    "utf-8",
-                    errors="replace",
-                )
-
+            with urllib.request.urlopen(request, timeout=45) as response:
+                body = response.read().decode("utf-8", errors="replace")
                 if response.status != 200:
-                    print(
-                        f"Telegram {method} returned "
-                        f"HTTP {response.status}: {body}"
-                    )
+                    print(f"Telegram {method} returned HTTP {response.status}: {body}")
                     return False
-
                 _LAST_TELEGRAM_SEND_MONOTONIC = time.monotonic()
                 return True
-
         except urllib.error.HTTPError as exc:
-            error_body = exc.read().decode(
-                "utf-8",
-                errors="replace",
-            )
-
+            error_body = exc.read().decode("utf-8", errors="replace")
             if exc.code == 429:
                 retry_after = 5
-
                 try:
                     error_json = json.loads(error_body)
-                    retry_after = int(
-                        error_json
-                        .get("parameters", {})
-                        .get("retry_after", retry_after)
-                    )
-                except (
-                    json.JSONDecodeError,
-                    TypeError,
-                    ValueError,
-                ):
+                    retry_after = int(error_json.get("parameters", {}).get("retry_after", retry_after))
+                except (json.JSONDecodeError, TypeError, ValueError):
                     header_value = exc.headers.get("Retry-After")
-
                     if header_value:
                         try:
                             retry_after = int(header_value)
                         except ValueError:
                             pass
-
-                wait_seconds = max(
-                    retry_after + 1,
-                    int(TELEGRAM_MIN_INTERVAL_SECONDS) + 1,
-                )
-
-                print(
-                    f"Telegram 429 on {method}; "
-                    f"waiting {wait_seconds}s "
-                    f"(attempt {attempt}/{max_attempts})"
-                )
+                wait_seconds = max(retry_after + 1, int(TELEGRAM_MIN_INTERVAL_SECONDS) + 1)
+                print(f"Telegram 429 on {method}; waiting {wait_seconds}s (attempt {attempt}/{max_attempts})")
                 time.sleep(wait_seconds)
                 continue
-
-            print(
-                f"Telegram {method} HTTP {exc.code}: "
-                f"{error_body}"
-            )
+            print(f"Telegram {method} HTTP {exc.code}: {error_body}")
             return False
-
-        except (
-            urllib.error.URLError,
-            TimeoutError,
-            OSError,
-        ) as exc:
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
             if attempt >= max_attempts:
-                print(
-                    f"Telegram {method} failed after "
-                    f"{max_attempts} attempts: {exc}"
-                )
+                print(f"Telegram {method} failed after {max_attempts} attempts: {exc}")
                 return False
-
             backoff = min(2 ** attempt, 20)
-
-            print(
-                f"Telegram {method} temporary error: "
-                f"{exc}; retrying in {backoff}s"
-            )
+            print(f"Telegram {method} temporary error: {exc}; retrying in {backoff}s")
             time.sleep(backoff)
-
     return False
 
 
 def send_telegram(text: str) -> bool:
     return telegram_api_post(
         "sendMessage",
-        {
-            "chat_id": CHAT_ID,
-            "text": text,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": "true",
-        },
+        {"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"},
     )
 
 
-
-def extract_exact_listing_location(
-    page_html: str,
-    url: str = "",
-    heading_text: str = "",
-) -> str:
-    """
-    Strict location extraction.
-
-    Trust only listing-specific sources:
-    1) listing heading (H1/H2/H3 captured from the detail page)
-    2) structured district/urban fields in page HTML
-    3) listing URL slug
-
-    Never scan the whole page body. If a location cannot be confirmed,
-    return "თბილისი" instead of guessing a district.
-    """
+def extract_exact_listing_location(page_html: str, url: str = "", heading_text: str = "") -> str:
     canonical_locations = [
         ("ნუცუბიძის ფერდობი", ["ნუცუბიძის ფერდობ"]),
         ("ლისის მიმდებარედ", ["ლისის მიმდებარ"]),
@@ -708,24 +494,17 @@ def extract_exact_listing_location(
 
     def match_canonical(value: str) -> str:
         value = normalize_text(value).lower()
-
-        # Prefer more specific Dighomi variants before broad "დიღომი".
         for canonical, stems in canonical_locations:
             for stem in stems:
                 if stem.lower() in value:
                     return canonical
-
         return ""
 
-    # 1) Strongest source: the listing's own visible heading.
     heading_location = match_canonical(heading_text)
-
     if heading_location:
         return heading_location
 
     decoded_html = html.unescape(page_html)
-
-    # 2) Structured listing location fields.
     structured_patterns = [
         r'"districtName"\s*:\s*"([^"]+)"',
         r'"district_name"\s*:\s*"([^"]+)"',
@@ -734,29 +513,17 @@ def extract_exact_listing_location(
         r'"urban_name"\s*:\s*"([^"]+)"',
         r'"locationName"\s*:\s*"([^"]+)"',
     ]
-
     structured_candidates = []
-
     for pattern in structured_patterns:
-        for match in re.finditer(
-            pattern,
-            decoded_html,
-            re.IGNORECASE | re.DOTALL,
-        ):
+        for match in re.finditer(pattern, decoded_html, re.IGNORECASE | re.DOTALL):
             location = match_canonical(match.group(1))
-
             if location:
                 structured_candidates.append(location)
-
     structured_candidates = list(dict.fromkeys(structured_candidates))
-
-    # Trust structured data only when it resolves to one location.
     if len(structured_candidates) == 1:
         return structured_candidates[0]
 
-    # 3) Listing URL slug, which is listing-specific.
     lowered_url = urllib.parse.unquote(url).lower()
-
     slug_locations = [
         ("nutsubidzis-ferdob", "ნუცუბიძის ფერდობი"),
         ("didi-dighom", "დიდი დიღომი"),
@@ -788,37 +555,22 @@ def extract_exact_listing_location(
         ("tabakhmela", "ტაბახმელა"),
         ("dighomi", "დიღომი"),
     ]
-
     for slug, location in slug_locations:
         if slug in lowered_url:
             return location
-
     return "თბილისი"
 
 
-
 def get_listing_details(url: str) -> dict[str, str]:
-    details = {
-        "image_url": "",
-        "location": "",
-    }
-
+    details = {"image_url": "", "location": ""}
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/151.0.0.0 Safari/537.36"
-            ),
-            "Accept": (
-                "text/html,application/xhtml+xml,application/xml;"
-                "q=0.9,image/avif,image/webp,*/*;q=0.8"
-            ),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "ka,en-US;q=0.9,en;q=0.8",
         },
     )
-
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             page_html = response.read().decode("utf-8", errors="ignore")
@@ -826,656 +578,304 @@ def get_listing_details(url: str) -> dict[str, str]:
         print(f"Could not open listing page: {url}: {exc}")
         return details
 
-    # ---------- Listing image ----------
     image_patterns = [
         r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',
         r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
     ]
-
     for pattern in image_patterns:
         match = re.search(pattern, page_html, re.IGNORECASE)
-
         if match:
             image_url = html.unescape(match.group(1)).strip()
-
             if image_url.startswith("//"):
                 image_url = "https:" + image_url
             elif image_url.startswith("/"):
                 image_url = urllib.parse.urljoin(url, image_url)
-
             if image_url.startswith("http"):
                 details["image_url"] = image_url
                 break
-
-    # ---------- District / neighborhood ----------
-    details["location"] = extract_exact_listing_location(
-        page_html,
-        url,
-    )
-
+    details["location"] = extract_exact_listing_location(page_html, url)
     return details
-
 
 
 def parse_iso_datetime(value: str) -> datetime | None:
     value = normalize_text(value)
-
     if not value:
         return None
-
     value = value.replace("Z", "+00:00")
-
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError:
         return None
-
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=GEORGIA_TZ)
-
     return parsed.astimezone(timezone.utc)
 
 
-def parse_myhome_posted_at(
-    rendered_text: str,
-    page_html: str,
-    now_local: datetime,
-) -> datetime | None:
-    """
-    Determine the original publication time as safely as possible.
-
-    Priority:
-    1) Structured creation/publication timestamp from the listing page.
-    2) Visible MyHome relative/explicit time as fallback.
-
-    Safety rule:
-    A visible "დღეს 00:00-ზე" is NOT trusted by itself because MyHome
-    can surface older/re-promoted listings with that display time.
-    If no structured timestamp exists and the visible time is exactly
-    00:00, return None so the listing is not sent as new.
-    """
+def parse_myhome_posted_at(rendered_text: str, page_html: str, now_local: datetime) -> datetime | None:
     decoded_html = html.unescape(page_html)
-
-    # ---------- 1. Structured/original publication time first ----------
     structured_patterns = [
-        r'"createdAt"\s*:\s*"([^"]+)"',
-        r'"created_at"\s*:\s*"([^"]+)"',
-        r'"createDate"\s*:\s*"([^"]+)"',
-        r'"publishDate"\s*:\s*"([^"]+)"',
-        r'"publishedAt"\s*:\s*"([^"]+)"',
-        r'"published_at"\s*:\s*"([^"]+)"',
+        r'"createdAt"\s*:\s*"([^"]+)"', r'"created_at"\s*:\s*"([^"]+)"',
+        r'"createDate"\s*:\s*"([^"]+)"', r'"publishDate"\s*:\s*"([^"]+)"',
+        r'"publishedAt"\s*:\s*"([^"]+)"', r'"published_at"\s*:\s*"([^"]+)"',
     ]
-
     for pattern in structured_patterns:
-        structured_match = re.search(
-            pattern,
-            decoded_html,
-            re.IGNORECASE,
-        )
-
-        if not structured_match:
-            continue
-
-        parsed = parse_iso_datetime(
-            structured_match.group(1)
-        )
-
-        if parsed is not None:
-            return parsed
+        structured_match = re.search(pattern, decoded_html, re.IGNORECASE)
+        if structured_match:
+            parsed = parse_iso_datetime(structured_match.group(1))
+            if parsed is not None:
+                return parsed
 
     numeric_patterns = [
-        r'"createdAt"\s*:\s*(\d{10,13})',
-        r'"created_at"\s*:\s*(\d{10,13})',
-        r'"createDate"\s*:\s*(\d{10,13})',
-        r'"publishDate"\s*:\s*(\d{10,13})',
-        r'"publishedAt"\s*:\s*(\d{10,13})',
-        r'"published_at"\s*:\s*(\d{10,13})',
+        r'"createdAt"\s*:\s*(\d{10,13})', r'"created_at"\s*:\s*(\d{10,13})',
+        r'"createDate"\s*:\s*(\d{10,13})', r'"publishDate"\s*:\s*(\d{10,13})',
+        r'"publishedAt"\s*:\s*(\d{10,13})', r'"published_at"\s*:\s*(\d{10,13})',
     ]
-
     for pattern in numeric_patterns:
-        numeric_match = re.search(
-            pattern,
-            decoded_html,
-            re.IGNORECASE,
-        )
+        numeric_match = re.search(pattern, decoded_html, re.IGNORECASE)
+        if numeric_match:
+            raw = int(numeric_match.group(1))
+            if raw > 10_000_000_000:
+                raw = raw / 1000
+            try:
+                return datetime.fromtimestamp(raw, tz=timezone.utc)
+            except (OSError, OverflowError, ValueError):
+                pass
 
-        if not numeric_match:
-            continue
-
-        raw = int(numeric_match.group(1))
-
-        if raw > 10_000_000_000:
-            raw = raw / 1000
-
-        try:
-            return datetime.fromtimestamp(
-                raw,
-                tz=timezone.utc,
-            )
-        except (OSError, OverflowError, ValueError):
-            pass
-
-    # ---------- 2. Visible MyHome time as fallback ----------
     rendered = normalize_text(rendered_text)
-
-    today_match = re.search(
-        r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
-        rendered,
-        re.IGNORECASE,
-    )
-
+    today_match = re.search(r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)", rendered, re.IGNORECASE)
     if today_match:
-        hour = int(today_match.group(1))
-        minute = int(today_match.group(2))
-
-        # Critical midnight protection:
-        # never trust visible "today 00:00" without structured creation time.
+        hour = int(today_match.group(1)); minute = int(today_match.group(2))
         if hour == 0 and minute == 0:
-            print(
-                "Publication time is visible as today 00:00 "
-                "without a structured timestamp; treating as unverified"
-            )
+            print("Publication time is visible as today 00:00 without a structured timestamp; treating as unverified")
             return None
+        return now_local.replace(hour=hour, minute=minute, second=0, microsecond=0).astimezone(timezone.utc)
 
-        return now_local.replace(
-            hour=hour,
-            minute=minute,
-            second=0,
-            microsecond=0,
-        ).astimezone(timezone.utc)
-
-    yesterday_match = re.search(
-        r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
-        rendered,
-        re.IGNORECASE,
-    )
-
+    yesterday_match = re.search(r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)", rendered, re.IGNORECASE)
     if yesterday_match:
         yesterday = now_local - timedelta(days=1)
-
-        return yesterday.replace(
-            hour=int(yesterday_match.group(1)),
-            minute=int(yesterday_match.group(2)),
-            second=0,
-            microsecond=0,
-        ).astimezone(timezone.utc)
+        return yesterday.replace(hour=int(yesterday_match.group(1)), minute=int(yesterday_match.group(2)), second=0, microsecond=0).astimezone(timezone.utc)
 
     months = {
-        "იანვარი": 1,
-        "იანვარს": 1,
-        "თებერვალი": 2,
-        "თებერვალს": 2,
-        "მარტი": 3,
-        "მარტს": 3,
-        "აპრილი": 4,
-        "აპრილს": 4,
-        "მაისი": 5,
-        "მაისს": 5,
-        "ივნისი": 6,
-        "ივნისს": 6,
-        "ივლისი": 7,
-        "ივლისს": 7,
-        "აგვისტო": 8,
-        "აგვისტოს": 8,
-        "სექტემბერი": 9,
-        "სექტემბერს": 9,
-        "ოქტომბერი": 10,
-        "ოქტომბერს": 10,
-        "ნოემბერი": 11,
-        "ნოემბერს": 11,
-        "დეკემბერი": 12,
-        "დეკემბერს": 12,
+        "იანვარი": 1, "იანვარს": 1, "თებერვალი": 2, "თებერვალს": 2,
+        "მარტი": 3, "მარტს": 3, "აპრილი": 4, "აპრილს": 4,
+        "მაისი": 5, "მაისს": 5, "ივნისი": 6, "ივნისს": 6,
+        "ივლისი": 7, "ივლისს": 7, "აგვისტო": 8, "აგვისტოს": 8,
+        "სექტემბერი": 9, "სექტემბერს": 9, "ოქტომბერი": 10, "ოქტომბერს": 10,
+        "ნოემბერი": 11, "ნოემბერს": 11, "დეკემბერი": 12, "დეკემბერს": 12,
     }
-
-    month_pattern = "|".join(
-        sorted(
-            (re.escape(month) for month in months),
-            key=len,
-            reverse=True,
-        )
-    )
-
+    month_pattern = "|".join(sorted((re.escape(month) for month in months), key=len, reverse=True))
     explicit_match = re.search(
-        rf"(?:^|\s)(\d{{1,2}})\s+({month_pattern})"
-        rf"(?:\s+(\d{{4}}))?"
-        rf"(?:\s+(\d{{1,2}}):(\d{{2}})(?:-?ზე)?)?",
+        rf"(?:^|\s)(\d{{1,2}})\s+({month_pattern})(?:\s+(\d{{4}}))?(?:\s+(\d{{1,2}}):(\d{{2}})(?:-?ზე)?)?",
         rendered,
         re.IGNORECASE,
     )
-
     if explicit_match:
-        year = (
-            int(explicit_match.group(3))
-            if explicit_match.group(3)
-            else now_local.year
-        )
-
+        year = int(explicit_match.group(3)) if explicit_match.group(3) else now_local.year
         try:
             local_dt = datetime(
-                year,
-                months[explicit_match.group(2).lower()],
-                int(explicit_match.group(1)),
-                int(explicit_match.group(4) or "0"),
-                int(explicit_match.group(5) or "0"),
-                tzinfo=GEORGIA_TZ,
+                year, months[explicit_match.group(2).lower()], int(explicit_match.group(1)),
+                int(explicit_match.group(4) or "0"), int(explicit_match.group(5) or "0"), tzinfo=GEORGIA_TZ,
             )
             return local_dt.astimezone(timezone.utc)
         except ValueError:
             pass
-
     return None
 
 
-async def enrich_unseen_items(
-    items: list[dict[str, Any]],
-) -> None:
+async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
     if not items:
         return
-
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-blink-features=AutomationControlled",
-            ],
+            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"],
         )
-
         context = await browser.new_context(
             locale="ka-GE",
-            viewport={
-                "width": 1440,
-                "height": 1200,
-            },
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/151.0.0.0 Safari/537.36"
-            ),
+            viewport={"width": 1440, "height": 1200},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
         )
-
-        await context.add_init_script(
-            "Object.defineProperty("
-            "navigator, 'webdriver', "
-            "{get: () => undefined})"
-        )
-
+        await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         for item in items:
             page = await context.new_page()
-
             try:
-                await page.goto(
-                    item["url"],
-                    wait_until="domcontentloaded",
-                    timeout=90_000,
-                )
-
+                await page.goto(item["url"], wait_until="domcontentloaded", timeout=90_000)
                 await page.wait_for_timeout(2_500)
-
-                rendered_text = normalize_text(
-                    await page.locator("body").inner_text()
-                )
+                rendered_text = normalize_text(await page.locator("body").inner_text())
                 page_html = await page.content()
                 now_local = datetime.now(GEORGIA_TZ)
-
-                posted_at = parse_myhome_posted_at(
-                    rendered_text,
-                    page_html,
-                    now_local,
-                )
-
-                item["posted_at_utc"] = (
-                    posted_at.isoformat()
-                    if posted_at is not None
-                    else ""
-                )
+                posted_at = parse_myhome_posted_at(rendered_text, page_html, now_local)
+                item["posted_at_utc"] = posted_at.isoformat() if posted_at is not None else ""
 
                 heading_parts: list[str] = []
-
                 for selector in ("h1", "h2", "h3"):
                     locator = page.locator(selector)
-
                     try:
                         count = min(await locator.count(), 5)
                     except Exception:
                         count = 0
-
                     for index in range(count):
                         try:
-                            value = normalize_text(
-                                await locator.nth(index).inner_text()
-                            )
+                            value = normalize_text(await locator.nth(index).inner_text())
                         except Exception:
                             continue
-
-                        if (
-                            value
-                            and (
-                                "ქირავდება" in value
-                                or "იყიდება" in value
-                            )
-                        ):
+                        if not value:
+                            continue
+                        if selector == "h1":
+                            heading_parts.append(value)
+                            continue
+                        if "ქირავდება" in value or "იყიდება" in value:
                             heading_parts.append(value)
 
                 listing_heading = " ".join(heading_parts)
+                item["location"] = extract_exact_listing_location(page_html, item["url"], listing_heading)
 
-                item["location"] = extract_exact_listing_location(
-                    page_html,
-                    item["url"],
-                    listing_heading,
-                )
-
-                og_image = await page.locator(
-                    'meta[property="og:image"]'
-                ).get_attribute("content")
-
+                og_image = await page.locator('meta[property="og:image"]').get_attribute("content")
                 if not og_image:
-                    og_image = await page.locator(
-                        'meta[name="twitter:image"]'
-                    ).get_attribute("content")
-
+                    og_image = await page.locator('meta[name="twitter:image"]').get_attribute("content")
                 if og_image:
                     og_image = html.unescape(og_image).strip()
-
                     if og_image.startswith("//"):
                         og_image = "https:" + og_image
                     elif og_image.startswith("/"):
-                        og_image = urllib.parse.urljoin(
-                            item["url"],
-                            og_image,
-                        )
-
+                        og_image = urllib.parse.urljoin(item["url"], og_image)
                     if og_image.startswith("http"):
                         item["detail_image_url"] = og_image
-
-                print(
-                    f"Detail {item['listing_id']}: "
-                    f"posted_at="
-                    f"{item.get('posted_at_utc') or 'UNKNOWN'}, "
-                    f"location={item.get('location')}"
-                )
-
+                print(f"Detail {item['listing_id']}: posted_at={item.get('posted_at_utc') or 'UNKNOWN'}, location={item.get('location')}")
             except Exception as exc:
                 item["posted_at_utc"] = ""
-
-                print(
-                    f"Detail check failed for "
-                    f"{item['listing_id']}: "
-                    f"{type(exc).__name__}: {exc}"
-                )
-
+                print(f"Detail check failed for {item['listing_id']}: {type(exc).__name__}: {exc}")
             finally:
                 await page.close()
-
         await context.close()
         await browser.close()
 
 
-def is_fresh_listing(
-    item: dict[str, Any],
-    previous_scan_at: datetime,
-    run_started_at: datetime,
-) -> bool:
+def is_fresh_listing(item: dict[str, Any], previous_scan_at: datetime, run_started_at: datetime) -> bool:
     posted_raw = item.get("posted_at_utc", "")
-
     if not posted_raw:
-        print(
-            f"SKIP {item['listing_id']}: "
-            "publication time could not be verified"
-        )
+        print(f"SKIP {item['listing_id']}: publication time could not be verified")
         return False
-
     posted_at = parse_iso_datetime(posted_raw)
-
     if posted_at is None:
-        print(
-            f"SKIP {item['listing_id']}: "
-            f"invalid publication timestamp {posted_raw!r}"
-        )
+        print(f"SKIP {item['listing_id']}: invalid publication timestamp {posted_raw!r}")
         return False
-
-    # Gate A: normal incremental scan window.
-    scan_lower_bound = previous_scan_at - timedelta(
-        minutes=FRESHNESS_GRACE_MINUTES
-    )
-
-    # Gate B: absolute safety window.
-    # Even if previous successful state is stale because earlier runs failed,
-    # an hours-old / yesterday listing can NEVER be sent as new.
-    absolute_lower_bound = run_started_at - timedelta(
-        minutes=MAX_LISTING_AGE_MINUTES
-    )
-
-    lower_bound = max(
-        scan_lower_bound,
-        absolute_lower_bound,
-    )
-
-    upper_bound = run_started_at + timedelta(
-        minutes=FRESHNESS_GRACE_MINUTES
-    )
-
+    scan_lower_bound = previous_scan_at - timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+    absolute_lower_bound = run_started_at - timedelta(minutes=MAX_LISTING_AGE_MINUTES)
+    lower_bound = max(scan_lower_bound, absolute_lower_bound)
+    upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
     fresh = lower_bound <= posted_at <= upper_bound
-
     if not fresh:
-        age_minutes = (
-            run_started_at - posted_at
-        ).total_seconds() / 60
-
-        print(
-            f"SKIP {item['listing_id']}: not fresh; "
-            f"posted={posted_at.isoformat()}, "
-            f"age={age_minutes:.1f}min, "
-            f"allowed={lower_bound.isoformat()}.."
-            f"{upper_bound.isoformat()}"
-        )
-
+        age_minutes = (run_started_at - posted_at).total_seconds() / 60
+        print(f"SKIP {item['listing_id']}: not fresh; posted={posted_at.isoformat()}, age={age_minutes:.1f}min, allowed={lower_bound.isoformat()}..{upper_bound.isoformat()}")
     return fresh
 
 
-def send_listing_to_telegram(
-    item: dict[str, Any],
-) -> bool:
+def send_listing_to_telegram(item: dict[str, Any]) -> bool:
     item = dict(item)
-
-    image_url = (
-        item.get("detail_image_url") or ""
-    ).strip()
-
+    image_url = (item.get("detail_image_url") or "").strip()
     if not image_url:
         details = get_listing_details(item["url"])
-
-        if (
-            details["location"]
-            and item.get("location") == "თბილისი"
-        ):
+        if details["location"] and item.get("location") == "თბილისი":
             item["location"] = details["location"]
-
         image_url = details["image_url"]
-
     caption = format_listing(item)
-
     if image_url:
         if telegram_api_post(
             "sendPhoto",
-            {
-                "chat_id": CHAT_ID,
-                "photo": image_url,
-                "caption": caption,
-                "parse_mode": "HTML",
-            },
+            {"chat_id": CHAT_ID, "photo": image_url, "caption": caption, "parse_mode": "HTML"},
         ):
             return True
-
-        print(
-            f"Photo delivery failed for "
-            f"{item['listing_id']}; "
-            "trying text-only fallback"
-        )
-
+        print(f"Photo delivery failed for {item['listing_id']}; trying text-only fallback")
     return send_telegram(caption)
 
 
 def format_listing(item: dict[str, Any]) -> str:
     rooms = item["rooms"] if item["rooms"] is not None else "—"
-
-    safe_url = html.escape(
-        item["url"],
-        quote=True,
-    )
-
+    safe_url = html.escape(item["url"], quote=True)
     return (
         "🏠 <b>ახალი განცხადება</b>\n\n"
-        f"🌐 <b>საიტი:</b> "
-        f"{html.escape(item['site'])}\n"
+        f"🌐 <b>საიტი:</b> {html.escape(item['site'])}\n"
         "🔑 <b>გარიგება:</b> ქირავდება\n"
-        f"📍 <b>უბანი:</b> "
-        f"{html.escape(item['location'])}\n"
+        f"📍 <b>უბანი:</b> {html.escape(item['location'])}\n"
         f"🚪 <b>ოთახები:</b> {rooms}\n"
-        f"📐 <b>ფართობი:</b> "
-        f"{html.escape(item['area'])}\n"
-        f"💰 <b>ფასი:</b> "
-        f"{html.escape(item['price'])}\n\n"
-        f"🔗 <a href=\"{safe_url}\">"
-        f"განცხადების გახსნა</a>"
+        f"📐 <b>ფართობი:</b> {html.escape(item['area'])}\n"
+        f"💰 <b>ფასი:</b> {html.escape(item['price'])}\n\n"
+        f"🔗 <a href=\"{safe_url}\">განცხადების გახსნა</a>"
     )
 
 
 async def main() -> int:
     if not TOKEN or not CHAT_ID:
-        print(
-            "Missing TELEGRAM_BOT_TOKEN "
-            "or TELEGRAM_CHAT_ID",
-            file=sys.stderr,
-        )
+        print("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
         return 2
-
     run_started_at = datetime.now(timezone.utc)
     state = load_state()
     listings, errors = await scrape_all_sources()
-
     if errors:
         print("Errors:")
-
         for error in errors:
             print(f"- {error}")
-
     if not listings and errors:
         return 1
 
     initialized = bool(state["initialized"])
-    previous_scan_at = parse_iso_datetime(
-        normalize_text(
-            state.get("last_successful_scan_at", "")
-        )
-    )
-
+    previous_scan_at = parse_iso_datetime(normalize_text(state.get("last_successful_scan_at", "")))
     unseen_items: list[dict[str, Any]] = []
-
     for item in listings:
         key = item["source_key"]
         listing_id = item["listing_id"]
         seen = state["seen"][key]
-
         if listing_id not in seen:
             unseen_items.append(item)
             seen.append(listing_id)
             state["seen"][key] = seen[-20000:]
-
-        state["max_ids"][key] = max(
-            int(state["max_ids"][key]),
-            int(listing_id),
-        )
+        state["max_ids"][key] = max(int(state["max_ids"][key]), int(listing_id))
 
     new_items: list[dict[str, Any]] = []
-
     if not initialized:
         state["initialized"] = True
-
         send_telegram(
             "✅ მონიტორინგი ჩართულია.\n\n"
-            "ვაკონტროლებ MyHome.ge-ზე თბილისში გასაქირავებელ "
-            "ბინებს, კერძო სახლებსა და აგარაკებს — 400$-დან, "
+            "ვაკონტროლებ MyHome.ge-ზე თბილისში გასაქირავებელ ბინებს, კერძო სახლებსა და აგარაკებს — 400$-დან, "
             "მხოლოდ ფიზიკური პირების განცხადებებს.\n\n"
-            "არსებული განცხადებები შენახულია; შეტყობინებები "
-            "მოვა მხოლოდ ახალი განცხადებების დამატებისას."
+            "არსებული განცხადებები შენახულია; შეტყობინებები მოვა მხოლოდ ახალი განცხადებების დამატებისას."
         )
-
-        print(
-            f"Initial baseline: stored "
-            f"{len(unseen_items)} currently visible listings"
-        )
-
+        print(f"Initial baseline: stored {len(unseen_items)} currently visible listings")
     elif previous_scan_at is None:
-        print(
-            "Freshness baseline created. "
-            f"Stored {len(unseen_items)} unseen listings "
-            "without notifications."
-        )
-
+        print(f"Freshness baseline created. Stored {len(unseen_items)} unseen listings without notifications.")
     else:
         await enrich_unseen_items(unseen_items)
-
         for item in unseen_items:
-            if is_fresh_listing(
-                item,
-                previous_scan_at,
-                run_started_at,
-            ):
+            if is_fresh_listing(item, previous_scan_at, run_started_at):
                 new_items.append(item)
-
         new_items.sort(
             key=lambda item: (
-                parse_iso_datetime(
-                    item.get("posted_at_utc", "")
-                )
-                or datetime.min.replace(tzinfo=timezone.utc),
+                parse_iso_datetime(item.get("posted_at_utc", "")) or datetime.min.replace(tzinfo=timezone.utc),
                 int(item["listing_id"]),
             )
         )
-
         sent_count = 0
         failed_items: list[dict[str, Any]] = []
-
         for item in new_items:
             if send_listing_to_telegram(item):
                 sent_count += 1
             else:
                 failed_items.append(item)
-                print(
-                    f"Telegram delivery failed for "
-                    f"{item['listing_id']}; "
-                    "it will be retried on the next run"
-                )
-
+                print(f"Telegram delivery failed for {item['listing_id']}; it will be retried on the next run")
         for item in failed_items:
             key = item["source_key"]
             listing_id = item["listing_id"]
-
-            state["seen"][key] = [
-                seen_id
-                for seen_id in state["seen"][key]
-                if seen_id != listing_id
-            ]
+            state["seen"][key] = [seen_id for seen_id in state["seen"][key] if seen_id != listing_id]
 
     if not initialized or previous_scan_at is None:
         sent_count = 0
-
     state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
     state["last_successful_scan_at"] = run_started_at.isoformat()
-
     save_state(state)
-
-    print(
-        f"Found {len(listings)} listings; "
-        f"unseen {len(unseen_items)}; "
-        f"verified-new {len(new_items)}; "
-        f"sent {sent_count} notifications"
-    )
-
+    print(f"Found {len(listings)} listings; unseen {len(unseen_items)}; verified-new {len(new_items)}; sent {sent_count} notifications")
     return 0
 
 
