@@ -24,8 +24,22 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 _NBG_RATES_CACHE: dict[str, float] | None = None
 GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
 FRESHNESS_GRACE_MINUTES = 5
-# Hard safety gate: never send a listing older than this at run time.
+# Normal production safety gate. Keep the established 35-minute behavior.
 MAX_LISTING_AGE_MINUTES = 35
+
+# A healthy production scan normally sees ~400+ listings across 22 pages.
+# Refuse to advance state when MyHome changes/breaks rendering and the
+# scraper suddenly sees an implausibly small result set.
+MIN_HEALTHY_LISTINGS = 100
+
+# One-time outage recovery. The last confirmed Telegram delivery was around
+# 2026-08-13 13:17 Asia/Tbilisi. A small buffer starts recovery at 13:10.
+# Existing seen IDs still prevent duplicates. After one healthy recovery run
+# state["url_change_recovery_completed"] becomes True and normal 35-minute
+# freshness behavior resumes automatically.
+URL_CHANGE_RECOVERY_START_UTC = datetime(
+    2026, 8, 13, 9, 10, tzinfo=timezone.utc
+)
 
 TELEGRAM_MIN_INTERVAL_SECONDS = 3.2
 TELEGRAM_MAX_ATTEMPTS = 6
@@ -222,19 +236,49 @@ def extract_location(text: str) -> str:
 
 
 def listing_id_from_url(site: str, url: str) -> str | None:
-    if site == "MyHome.ge":
-        match = re.search(
-            r"/(?:udzravi-qoneba|real-estate)/(\d+)(?:[/?#]|$)",
-            url,
-            re.IGNORECASE,
-        )
-    else:
+    """Extract a listing ID from both legacy and current MyHome URL formats."""
+    if site != "MyHome.ge":
         match = re.search(
             r"/real-estate/(?!l/)[^?#]*-(\d+)(?:[/?#]|$)",
             url,
+            re.IGNORECASE,
         )
+        return match.group(1) if match else None
 
-    return match.group(1) if match else None
+    try:
+        parts = urllib.parse.urlsplit(url)
+        path = urllib.parse.unquote(parts.path)
+    except Exception:
+        path = urllib.parse.unquote(url)
+
+    # Only treat URLs under known MyHome listing roots as listing candidates.
+    if not re.search(r"/(?:udzravi-qoneba|real-estate)(?:/|$)", path, re.IGNORECASE):
+        return None
+
+    patterns = (
+        r"/(?:udzravi-qoneba|real-estate)/(\d{6,10})(?:/|$)",
+        r"/(?:udzravi-qoneba|real-estate)/[^/?#]*-(\d{6,10})(?:/|$)",
+        r"-(\d{6,10})(?:/)?$",
+        r"/(\d{6,10})(?:/)?$",
+    )
+
+    for regex in patterns:
+        match = re.search(regex, path, re.IGNORECASE)
+        if match:
+            return match.group(1)
+
+    try:
+        query = urllib.parse.parse_qs(parts.query)
+    except Exception:
+        query = {}
+
+    for key in ("id", "listing_id", "statement_id", "pr_id"):
+        values = query.get(key, [])
+        for value in values:
+            if re.fullmatch(r"\d{6,10}", value or ""):
+                return value
+
+    return None
 
 
 def page_url(url: str, page_number: int) -> str:
@@ -376,6 +420,7 @@ def default_state() -> dict[str, Any]:
         "max_ids": {source["key"]: 0 for source in SOURCES},
         "heartbeat_week": "",
         "last_successful_scan_at": "",
+        "url_change_recovery_completed": False,
     }
 
 
@@ -753,23 +798,43 @@ async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
         await browser.close()
 
 
-def is_fresh_listing(item: dict[str, Any], previous_scan_at: datetime, run_started_at: datetime) -> bool:
+def is_fresh_listing(
+    item: dict[str, Any],
+    previous_scan_at: datetime,
+    run_started_at: datetime,
+    *,
+    recovery_mode: bool = False,
+) -> bool:
     posted_raw = item.get("posted_at_utc", "")
     if not posted_raw:
         print(f"SKIP {item['listing_id']}: publication time could not be verified")
         return False
+
     posted_at = parse_iso_datetime(posted_raw)
     if posted_at is None:
         print(f"SKIP {item['listing_id']}: invalid publication timestamp {posted_raw!r}")
         return False
-    scan_lower_bound = previous_scan_at - timedelta(minutes=FRESHNESS_GRACE_MINUTES)
-    absolute_lower_bound = run_started_at - timedelta(minutes=MAX_LISTING_AGE_MINUTES)
-    lower_bound = max(scan_lower_bound, absolute_lower_bound)
-    upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+
+    if recovery_mode:
+        lower_bound = URL_CHANGE_RECOVERY_START_UTC
+        upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+    else:
+        scan_lower_bound = previous_scan_at - timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+        absolute_lower_bound = run_started_at - timedelta(minutes=MAX_LISTING_AGE_MINUTES)
+        lower_bound = max(scan_lower_bound, absolute_lower_bound)
+        upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+
     fresh = lower_bound <= posted_at <= upper_bound
+
     if not fresh:
         age_minutes = (run_started_at - posted_at).total_seconds() / 60
-        print(f"SKIP {item['listing_id']}: not fresh; posted={posted_at.isoformat()}, age={age_minutes:.1f}min, allowed={lower_bound.isoformat()}..{upper_bound.isoformat()}")
+        mode = "recovery" if recovery_mode else "normal"
+        print(
+            f"SKIP {item['listing_id']}: not fresh ({mode}); "
+            f"posted={posted_at.isoformat()}, age={age_minutes:.1f}min, "
+            f"allowed={lower_bound.isoformat()}..{upper_bound.isoformat()}"
+        )
+
     return fresh
 
 
@@ -811,30 +876,61 @@ async def main() -> int:
     if not TOKEN or not CHAT_ID:
         print("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
         return 2
+
     run_started_at = datetime.now(timezone.utc)
     state = load_state()
     listings, errors = await scrape_all_sources()
+
     if errors:
         print("Errors:")
         for error in errors:
             print(f"- {error}")
-    if not listings and errors:
+
+    if len(listings) < MIN_HEALTHY_LISTINGS:
+        print(
+            "UNHEALTHY SCAN: "
+            f"only {len(listings)} listings detected; "
+            f"minimum expected is {MIN_HEALTHY_LISTINGS}. "
+            "State will NOT be saved."
+        )
         return 1
 
     initialized = bool(state["initialized"])
-    previous_scan_at = parse_iso_datetime(normalize_text(state.get("last_successful_scan_at", "")))
+    previous_scan_at = parse_iso_datetime(
+        normalize_text(state.get("last_successful_scan_at", ""))
+    )
+
+    recovery_mode = (
+        initialized
+        and previous_scan_at is not None
+        and not bool(state.get("url_change_recovery_completed", False))
+    )
+
+    if recovery_mode:
+        print(
+            "URL-change recovery mode enabled: checking unseen listings "
+            f"published since {URL_CHANGE_RECOVERY_START_UTC.isoformat()}"
+        )
+
     unseen_items: list[dict[str, Any]] = []
+
     for item in listings:
         key = item["source_key"]
         listing_id = item["listing_id"]
         seen = state["seen"][key]
+
         if listing_id not in seen:
             unseen_items.append(item)
             seen.append(listing_id)
             state["seen"][key] = seen[-20000:]
-        state["max_ids"][key] = max(int(state["max_ids"][key]), int(listing_id))
+
+        state["max_ids"][key] = max(
+            int(state["max_ids"][key]),
+            int(listing_id),
+        )
 
     new_items: list[dict[str, Any]] = []
+
     if not initialized:
         state["initialized"] = True
         send_telegram(
@@ -843,39 +939,93 @@ async def main() -> int:
             "მხოლოდ ფიზიკური პირების განცხადებებს.\n\n"
             "არსებული განცხადებები შენახულია; შეტყობინებები მოვა მხოლოდ ახალი განცხადებების დამატებისას."
         )
-        print(f"Initial baseline: stored {len(unseen_items)} currently visible listings")
+        print(
+            f"Initial baseline: stored {len(unseen_items)} "
+            "currently visible listings"
+        )
+
     elif previous_scan_at is None:
-        print(f"Freshness baseline created. Stored {len(unseen_items)} unseen listings without notifications.")
+        print(
+            f"Freshness baseline created. Stored {len(unseen_items)} "
+            "unseen listings without notifications."
+        )
+
     else:
         await enrich_unseen_items(unseen_items)
+
+        retry_unverified: list[dict[str, Any]] = []
+
         for item in unseen_items:
-            if is_fresh_listing(item, previous_scan_at, run_started_at):
+            if not item.get("posted_at_utc"):
+                retry_unverified.append(item)
+                continue
+
+            if is_fresh_listing(
+                item,
+                previous_scan_at,
+                run_started_at,
+                recovery_mode=recovery_mode,
+            ):
                 new_items.append(item)
+
+        for item in retry_unverified:
+            key = item["source_key"]
+            listing_id = item["listing_id"]
+            state["seen"][key] = [
+                seen_id
+                for seen_id in state["seen"][key]
+                if seen_id != listing_id
+            ]
+            print(
+                f"RETRY {listing_id}: publication time unverified; "
+                "not persisted as seen"
+            )
+
         new_items.sort(
             key=lambda item: (
-                parse_iso_datetime(item.get("posted_at_utc", "")) or datetime.min.replace(tzinfo=timezone.utc),
+                parse_iso_datetime(item.get("posted_at_utc", ""))
+                or datetime.min.replace(tzinfo=timezone.utc),
                 int(item["listing_id"]),
             )
         )
+
         sent_count = 0
         failed_items: list[dict[str, Any]] = []
+
         for item in new_items:
             if send_listing_to_telegram(item):
                 sent_count += 1
             else:
                 failed_items.append(item)
-                print(f"Telegram delivery failed for {item['listing_id']}; it will be retried on the next run")
+                print(
+                    f"Telegram delivery failed for {item['listing_id']}; "
+                    "it will be retried on the next run"
+                )
+
         for item in failed_items:
             key = item["source_key"]
             listing_id = item["listing_id"]
-            state["seen"][key] = [seen_id for seen_id in state["seen"][key] if seen_id != listing_id]
+            state["seen"][key] = [
+                seen_id
+                for seen_id in state["seen"][key]
+                if seen_id != listing_id
+            ]
 
     if not initialized or previous_scan_at is None:
         sent_count = 0
+
+    if recovery_mode:
+        state["url_change_recovery_completed"] = True
+        print("URL-change recovery completed; future runs use normal freshness.")
+
     state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
     state["last_successful_scan_at"] = run_started_at.isoformat()
     save_state(state)
-    print(f"Found {len(listings)} listings; unseen {len(unseen_items)}; verified-new {len(new_items)}; sent {sent_count} notifications")
+
+    print(
+        f"Found {len(listings)} listings; unseen {len(unseen_items)}; "
+        f"verified-new {len(new_items)}; sent {sent_count} notifications"
+    )
     return 0
 
 
