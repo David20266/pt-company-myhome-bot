@@ -2351,13 +2351,15 @@
       "22872363",
       "25759234",
       "25759192",
-      "25759025"
+      "25759025",
+      "25759590",
+      "25759237"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25759234
+    "myhome_rent": 25759590
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-14T11:22:58.312894+00:00",
+  "last_successful_scan_at": "2026-08-14T11:38:01.581417+00:00",
   "url_change_recovery_completed": true
 }
