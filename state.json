@@ -2552,13 +2552,16 @@
       "25768808",
       "25768771",
       "25768760",
-      "25488461"
+      "25488461",
+      "25768882",
+      "25768866",
+      "25768837"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25768813
+    "myhome_rent": 25768882
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-15T14:23:14.667498+00:00",
+  "last_successful_scan_at": "2026-08-15T14:38:00.281180+00:00",
   "url_change_recovery_completed": true
 }
