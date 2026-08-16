@@ -2801,13 +2801,14 @@
       "25773468",
       "25773487",
       "25773498",
-      "25773488"
+      "25773488",
+      "25773568"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25773498
+    "myhome_rent": 25773568
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-16T22:42:58.817828+00:00",
+  "last_successful_scan_at": "2026-08-16T22:57:59.377681+00:00",
   "url_change_recovery_completed": true
 }
