@@ -2647,13 +2647,14 @@
       "25770651",
       "25770729",
       "25770724",
-      "25515201"
+      "25515201",
+      "18409648"
     ]
   },
   "max_ids": {
     "myhome_rent": 25770729
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-16T09:22:59.452589+00:00",
+  "last_successful_scan_at": "2026-08-16T09:42:58.920103+00:00",
   "url_change_recovery_completed": true
 }
