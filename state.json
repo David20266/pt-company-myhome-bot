@@ -2798,13 +2798,14 @@
       "25773447",
       "25773481",
       "25773474",
-      "25773468"
+      "25773468",
+      "25773487"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25773481
+    "myhome_rent": 25773487
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-16T21:12:58.927548+00:00",
+  "last_successful_scan_at": "2026-08-16T21:27:58.652145+00:00",
   "url_change_recovery_completed": true
 }
