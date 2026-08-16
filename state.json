@@ -2661,13 +2661,16 @@
       "25771111",
       "25368310",
       "25771082",
-      "25771070"
+      "25771070",
+      "25645365",
+      "25689089",
+      "25771208"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25771125
+    "myhome_rent": 25771208
   },
   "heartbeat_week": "2026-W33",
-  "last_successful_scan_at": "2026-08-16T10:43:01.488176+00:00",
+  "last_successful_scan_at": "2026-08-16T10:58:07.728189+00:00",
   "url_change_recovery_completed": true
 }
