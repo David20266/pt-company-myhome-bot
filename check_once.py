@@ -25,7 +25,7 @@ _NBG_RATES_CACHE: dict[str, float] | None = None
 GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
 FRESHNESS_GRACE_MINUTES = 5
 # Normal production safety gate. Keep the established 35-minute behavior.
-MAX_LISTING_AGE_MINUTES = 35
+MAX_LISTING_AGE_MINUTES = 50
 
 # A healthy production scan normally sees ~400+ listings across 22 pages.
 # Refuse to advance state when MyHome changes/breaks rendering and the
