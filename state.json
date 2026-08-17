@@ -2809,13 +2809,14 @@
       "25773665",
       "25773715",
       "25773733",
-      "25773720"
+      "25773720",
+      "25102712"
     ]
   },
   "max_ids": {
     "myhome_rent": 25773733
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-17T05:32:59.514104+00:00",
+  "last_successful_scan_at": "2026-08-17T05:52:59.877607+00:00",
   "url_change_recovery_completed": true
 }
