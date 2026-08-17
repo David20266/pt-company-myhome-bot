@@ -331,6 +331,7 @@ async def collect_page_links(page: Any) -> list[dict[str, str]]:
 async def scrape_all_sources():
     found: dict[tuple[str, str], dict[str, Any]] = {}
     errors: list[str] = []
+    empty_pages: list[str] = []
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
@@ -355,23 +356,43 @@ async def scrape_all_sources():
                 page = await context.new_page()
                 try:
                     print(f"Checking {source['key']} page {page_number}")
-                    await page.goto(
-                        page_url(source["url"], page_number),
-                        wait_until="domcontentloaded",
-                        timeout=90_000,
-                    )
-                    await page.wait_for_timeout(5_000)
-                    for _ in range(3):
-                        await page.mouse.wheel(0, 1600)
-                        await page.wait_for_timeout(700)
+                    requested_url = page_url(source["url"], page_number)
+                    candidates: list[dict[str, str]] = []
+                    page_listing_ids: set[str | None] = set()
+                    for attempt in range(1, 4):
+                        await page.goto(
+                            requested_url,
+                            wait_until="domcontentloaded",
+                            timeout=90_000,
+                        )
+                        await page.wait_for_timeout(5_000)
+                        for _ in range(3):
+                            await page.mouse.wheel(0, 1600)
+                            await page.wait_for_timeout(700)
 
-                    candidates = await collect_page_links(page)
-                    page_listing_ids = {
-                        listing_id_from_url(source["site"], item["href"])
-                        for item in candidates
-                    }
-                    page_listing_ids.discard(None)
-                    print(f"{source['key']} page {page_number}: {len(page_listing_ids)} listing IDs detected")
+                        candidates = await collect_page_links(page)
+                        page_listing_ids = {
+                            listing_id_from_url(source["site"], item["href"])
+                            for item in candidates
+                        }
+                        page_listing_ids.discard(None)
+                        print(
+                            f"{source['key']} page {page_number}: "
+                            f"{len(page_listing_ids)} listing IDs detected "
+                            f"(attempt {attempt}/3)"
+                        )
+                        if page_listing_ids:
+                            break
+                        if attempt < 3:
+                            print(
+                                f"{source['key']} page {page_number}: "
+                                "unexpected empty result; retrying same page"
+                            )
+                            await page.wait_for_timeout(2_000)
+
+                    if not page_listing_ids:
+                        empty_pages.append(f"{source['key']} page {page_number}")
+                        continue
 
                     for candidate in candidates:
                         url = candidate["href"].split("#", 1)[0]
@@ -410,7 +431,7 @@ async def scrape_all_sources():
                     await page.close()
         await context.close()
         await browser.close()
-    return list(found.values()), errors
+    return list(found.values()), errors, empty_pages
 
 
 def default_state() -> dict[str, Any]:
@@ -879,12 +900,22 @@ async def main() -> int:
 
     run_started_at = datetime.now(timezone.utc)
     state = load_state()
-    listings, errors = await scrape_all_sources()
+    listings, errors, empty_pages = await scrape_all_sources()
 
     if errors:
         print("Errors:")
         for error in errors:
             print(f"- {error}")
+        print("UNHEALTHY SCAN: page-level errors detected. State will NOT be saved.")
+        return 1
+
+    if empty_pages:
+        print(
+            "UNHEALTHY SCAN: the following pages returned 0 listing IDs "
+            "after 3 attempts: " + ", ".join(empty_pages) + ". "
+            "State will NOT be saved."
+        )
+        return 1
 
     if len(listings) < MIN_HEALTHY_LISTINGS:
         print(
