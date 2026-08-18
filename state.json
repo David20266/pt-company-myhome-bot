@@ -3311,13 +3311,16 @@
       "25793617",
       "25793715",
       "18951832",
-      "25793777"
+      "25793777",
+      "25793794",
+      "25793802",
+      "25793787"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25793777
+    "myhome_rent": 25793802
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-18T17:18:01.512466+00:00",
+  "last_successful_scan_at": "2026-08-18T17:38:01.744619+00:00",
   "url_change_recovery_completed": true
 }
