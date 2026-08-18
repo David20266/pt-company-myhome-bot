@@ -3328,13 +3328,15 @@
       "25793960",
       "25374991",
       "25793945",
-      "25793944"
+      "25793944",
+      "25793999",
+      "25793973"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25793967
+    "myhome_rent": 25793999
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-18T18:38:01.826919+00:00",
+  "last_successful_scan_at": "2026-08-18T18:53:01.443976+00:00",
   "url_change_recovery_completed": true
 }
