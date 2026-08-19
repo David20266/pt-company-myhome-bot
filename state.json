@@ -3411,13 +3411,15 @@
       "25796862",
       "25796805",
       "25796573",
-      "25796524"
+      "25796524",
+      "25797187",
+      "25797130"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25797012
+    "myhome_rent": 25797187
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-19T09:04:30.754712+00:00",
+  "last_successful_scan_at": "2026-08-19T09:13:01.891085+00:00",
   "url_change_recovery_completed": true
 }
