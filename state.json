@@ -3811,13 +3811,14 @@
       "25815593",
       "25815580",
       "23746979",
-      "23682325"
+      "23682325",
+      "25815673"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25815612
+    "myhome_rent": 25815673
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-20T16:43:16.660924+00:00",
+  "last_successful_scan_at": "2026-08-20T17:03:08.964663+00:00",
   "url_change_recovery_completed": true
 }
