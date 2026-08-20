@@ -3684,13 +3684,16 @@
       "19004738",
       "25809342",
       "25809328",
-      "25809286"
+      "25809286",
+      "18737478",
+      "25809742",
+      "25062618"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25809523
+    "myhome_rent": 25809742
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-20T10:08:01.532790+00:00",
+  "last_successful_scan_at": "2026-08-20T10:22:59.622348+00:00",
   "url_change_recovery_completed": true
 }
