@@ -3820,13 +3820,15 @@
       "25815740",
       "25177421",
       "25815703",
-      "25815692"
+      "25815692",
+      "25815799",
+      "25815785"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25815747
+    "myhome_rent": 25815799
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-20T17:22:59.565769+00:00",
+  "last_successful_scan_at": "2026-08-20T17:43:02.028904+00:00",
   "url_change_recovery_completed": true
 }
