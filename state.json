@@ -3858,13 +3858,16 @@
       "25816157",
       "25816170",
       "25816168",
-      "25816161"
+      "25816161",
+      "25816202",
+      "25816181",
+      "25816174"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25816170
+    "myhome_rent": 25816202
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-20T20:38:02.228059+00:00",
+  "last_successful_scan_at": "2026-08-20T20:58:09.417406+00:00",
   "url_change_recovery_completed": true
 }
