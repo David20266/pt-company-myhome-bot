@@ -4027,13 +4027,14 @@
       "25823608",
       "25823592",
       "25823496",
-      "25823473"
+      "25823473",
+      "25824086"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25823703
+    "myhome_rent": 25824086
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-21T13:43:01.023950+00:00",
+  "last_successful_scan_at": "2026-08-21T14:03:00.098152+00:00",
   "url_change_recovery_completed": true
 }
