@@ -4001,13 +4001,15 @@
       "25821311",
       "25821299",
       "25821266",
-      "25821206"
+      "25821206",
+      "25434794",
+      "25821562"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25821402
+    "myhome_rent": 25821562
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-21T12:03:01.127575+00:00",
+  "last_successful_scan_at": "2026-08-21T12:18:00.725866+00:00",
   "url_change_recovery_completed": true
 }
