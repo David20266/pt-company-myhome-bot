@@ -3871,13 +3871,14 @@
       "25816341",
       "25816351",
       "25816382",
-      "25816418"
+      "25816418",
+      "25816419"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25816418
+    "myhome_rent": 25816419
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-21T02:03:17.039388+00:00",
+  "last_successful_scan_at": "2026-08-21T02:23:05.481450+00:00",
   "url_change_recovery_completed": true
 }
