@@ -3962,13 +3962,16 @@
       "25819399",
       "21275812",
       "21446928",
-      "25819290"
+      "25819290",
+      "25819668",
+      "25819626",
+      "25819591"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25819445
+    "myhome_rent": 25819668
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-21T10:08:00.330442+00:00",
+  "last_successful_scan_at": "2026-08-21T10:28:09.768476+00:00",
   "url_change_recovery_completed": true
 }
