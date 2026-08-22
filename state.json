@@ -4258,13 +4258,15 @@
       "25831487",
       "25831456",
       "25363916",
-      "25831767"
+      "25831767",
+      "25831914",
+      "25831900"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25831767
+    "myhome_rent": 25831914
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-22T14:37:59.401579+00:00",
+  "last_successful_scan_at": "2026-08-22T14:53:04.979852+00:00",
   "url_change_recovery_completed": true
 }
