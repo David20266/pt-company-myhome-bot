@@ -4128,13 +4128,14 @@
       "25827133",
       "25827179",
       "25827176",
-      "25827145"
+      "25827145",
+      "25827213"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25827179
+    "myhome_rent": 25827213
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-22T06:37:57.756541+00:00",
+  "last_successful_scan_at": "2026-08-22T06:58:00.833260+00:00",
   "url_change_recovery_completed": true
 }
