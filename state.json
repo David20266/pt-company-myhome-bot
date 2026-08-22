@@ -4295,13 +4295,15 @@
       "25832711",
       "25832790",
       "25832779",
-      "25832769"
+      "25832769",
+      "25832877",
+      "25832840"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25832790
+    "myhome_rent": 25832877
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-22T18:07:58.839022+00:00",
+  "last_successful_scan_at": "2026-08-22T18:28:05.388439+00:00",
   "url_change_recovery_completed": true
 }
