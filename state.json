@@ -4322,13 +4322,14 @@
       "25833275",
       "25833264",
       "25833262",
-      "25833257"
+      "25833257",
+      "25833333"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25833275
+    "myhome_rent": 25833333
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-22T21:48:01.893515+00:00",
+  "last_successful_scan_at": "2026-08-22T22:03:01.399412+00:00",
   "url_change_recovery_completed": true
 }
