@@ -4306,13 +4306,15 @@
       "22774897",
       "25833036",
       "25833024",
-      "25833020"
+      "25833020",
+      "25833099",
+      "25833089"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25833036
+    "myhome_rent": 25833099
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-22T19:43:08.559158+00:00",
+  "last_successful_scan_at": "2026-08-22T19:58:00.753080+00:00",
   "url_change_recovery_completed": true
 }
