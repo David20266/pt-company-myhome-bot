@@ -4445,13 +4445,15 @@
       "25836373",
       "25836448",
       "25836444",
-      "25147566"
+      "25147566",
+      "25836461",
+      "25836475"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25836448
+    "myhome_rent": 25836475
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-23T15:18:01.533429+00:00",
+  "last_successful_scan_at": "2026-08-23T15:38:08.544429+00:00",
   "url_change_recovery_completed": true
 }
