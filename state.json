@@ -4382,13 +4382,16 @@
       "25834722",
       "25834741",
       "25834702",
-      "25834687"
+      "25834687",
+      "25834869",
+      "25834817",
+      "25834775"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25834741
+    "myhome_rent": 25834869
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-23T10:23:00.916347+00:00",
+  "last_successful_scan_at": "2026-08-23T10:38:05.464774+00:00",
   "url_change_recovery_completed": true
 }
