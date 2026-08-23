@@ -4503,13 +4503,15 @@
       "25837302",
       "25837326",
       "25837308",
-      "19696643"
+      "19696643",
+      "25837474",
+      "25837463"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25837326
+    "myhome_rent": 25837474
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-23T22:08:25.054424+00:00",
+  "last_successful_scan_at": "2026-08-23T22:28:00.914542+00:00",
   "url_change_recovery_completed": true
 }
