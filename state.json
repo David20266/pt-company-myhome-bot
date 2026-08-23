@@ -4417,13 +4417,14 @@
       "25835593",
       "25835620",
       "25835603",
-      "25835581"
+      "25835581",
+      "25835692"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25835620
+    "myhome_rent": 25835692
   },
   "heartbeat_week": "2026-W34",
-  "last_successful_scan_at": "2026-08-23T12:58:01.279728+00:00",
+  "last_successful_scan_at": "2026-08-23T13:17:58.564821+00:00",
   "url_change_recovery_completed": true
 }
