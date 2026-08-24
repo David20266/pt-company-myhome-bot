@@ -4716,13 +4716,16 @@
       "25844131",
       "25844121",
       "25844090",
-      "25843905"
+      "25843905",
+      "25844715",
+      "23530512",
+      "25844482"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25844131
+    "myhome_rent": 25844753
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-24T13:18:10.016293+00:00",
+  "last_successful_scan_at": "2026-08-24T13:38:00.978801+00:00",
   "url_change_recovery_completed": true
 }
