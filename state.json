@@ -4509,13 +4509,16 @@
       "18743432",
       "25837556",
       "25837561",
-      "25837587"
+      "25837587",
+      "25837614",
+      "23315394",
+      "25837607"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25837587
+    "myhome_rent": 25837614
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-24T04:13:00.181399+00:00",
+  "last_successful_scan_at": "2026-08-24T04:32:57.419918+00:00",
   "url_change_recovery_completed": true
 }
