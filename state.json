@@ -4822,13 +4822,14 @@
       "25847746",
       "25847743",
       "25847723",
-      "25844334"
+      "25844334",
+      "25194172"
     ]
   },
   "max_ids": {
     "myhome_rent": 25847764
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-24T19:28:02.019674+00:00",
+  "last_successful_scan_at": "2026-08-24T19:48:04.976612+00:00",
   "url_change_recovery_completed": true
 }
