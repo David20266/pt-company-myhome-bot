@@ -4941,13 +4941,15 @@
       "25852541",
       "25742382",
       "25853048",
-      "25852891"
+      "25852891",
+      "25853259",
+      "25853148"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25853048
+    "myhome_rent": 25853259
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-25T10:47:58.577701+00:00",
+  "last_successful_scan_at": "2026-08-25T11:02:59.247334+00:00",
   "url_change_recovery_completed": true
 }
