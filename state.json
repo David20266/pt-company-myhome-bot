@@ -4935,13 +4935,16 @@
       "25852402",
       "25852330",
       "25852278",
-      "25852227"
+      "25852227",
+      "25852636",
+      "25852564",
+      "25852541"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25852431
+    "myhome_rent": 25852636
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-25T10:13:15.154706+00:00",
+  "last_successful_scan_at": "2026-08-25T10:28:05.086089+00:00",
   "url_change_recovery_completed": true
 }
