@@ -5311,13 +5311,15 @@
       "25869755",
       "25643680",
       "25869746",
-      "18822617"
+      "18822617",
+      "24800805",
+      "25869781"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25869762
+    "myhome_rent": 25869781
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-26T19:48:00.817822+00:00",
+  "last_successful_scan_at": "2026-08-26T20:03:01.196855+00:00",
   "url_change_recovery_completed": true
 }
