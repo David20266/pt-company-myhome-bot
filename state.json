@@ -5263,13 +5263,15 @@
       "25868834",
       "25161780",
       "25868785",
-      "25641233"
+      "25641233",
+      "25869045",
+      "25869109"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25869022
+    "myhome_rent": 25869109
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-26T15:53:06.250869+00:00",
+  "last_successful_scan_at": "2026-08-26T16:13:00.004614+00:00",
   "url_change_recovery_completed": true
 }
