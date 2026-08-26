@@ -5275,13 +5275,16 @@
       "25869290",
       "25869295",
       "25869270",
-      "25869257"
+      "25869257",
+      "25869333",
+      "25869327",
+      "25869313"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25869295
+    "myhome_rent": 25869333
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-26T17:23:02.215702+00:00",
+  "last_successful_scan_at": "2026-08-26T17:38:02.846790+00:00",
   "url_change_recovery_completed": true
 }
