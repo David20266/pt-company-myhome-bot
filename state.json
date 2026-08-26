@@ -5211,13 +5211,16 @@
       "25864603",
       "21936772",
       "25864449",
-      "25864441"
+      "25864441",
+      "25579429",
+      "25865114",
+      "25865002"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25864804
+    "myhome_rent": 25865114
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-26T11:48:13.184295+00:00",
+  "last_successful_scan_at": "2026-08-26T12:03:00.633908+00:00",
   "url_change_recovery_completed": true
 }
