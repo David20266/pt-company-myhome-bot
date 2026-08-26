@@ -5268,13 +5268,14 @@
       "25869109",
       "25869188",
       "25869178",
-      "25869173"
+      "25869173",
+      "25869216"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25869188
+    "myhome_rent": 25869216
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-26T16:43:07.979259+00:00",
+  "last_successful_scan_at": "2026-08-26T17:03:01.820268+00:00",
   "url_change_recovery_completed": true
 }
