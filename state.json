@@ -5499,13 +5499,14 @@
       "25030721",
       "25881371",
       "25451978",
-      "25881415"
+      "25881415",
+      "25881432"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25881415
+    "myhome_rent": 25881432
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T22:03:01.680373+00:00",
+  "last_successful_scan_at": "2026-08-27T22:22:58.590513+00:00",
   "url_change_recovery_completed": true
 }
