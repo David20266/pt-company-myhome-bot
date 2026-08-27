@@ -5335,13 +5335,14 @@
       "25870114",
       "25870107",
       "23433222",
-      "25870132"
+      "25870132",
+      "25870144"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25870132
+    "myhome_rent": 25870144
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T06:02:59.487902+00:00",
+  "last_successful_scan_at": "2026-08-27T06:17:59.732775+00:00",
   "url_change_recovery_completed": true
 }
