@@ -5402,13 +5402,15 @@
       "25874519",
       "25874456",
       "25874956",
-      "25363393"
+      "25363393",
+      "25875723",
+      "25875527"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25874956
+    "myhome_rent": 25875723
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T11:37:59.322372+00:00",
+  "last_successful_scan_at": "2026-08-27T11:52:59.926622+00:00",
   "url_change_recovery_completed": true
 }
