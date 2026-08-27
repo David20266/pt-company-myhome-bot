@@ -5455,13 +5455,15 @@
       "25880510",
       "25880306",
       "25880697",
-      "25880694"
+      "25880694",
+      "25880758",
+      "25880753"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25880697
+    "myhome_rent": 25880758
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T16:17:59.704776+00:00",
+  "last_successful_scan_at": "2026-08-27T16:38:00.723611+00:00",
   "url_change_recovery_completed": true
 }
