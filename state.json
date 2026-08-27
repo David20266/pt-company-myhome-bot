@@ -5336,13 +5336,16 @@
       "25870107",
       "23433222",
       "25870132",
-      "25870144"
+      "25870144",
+      "25870180",
+      "25870174",
+      "25870153"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25870144
+    "myhome_rent": 25870180
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T06:17:59.732775+00:00",
+  "last_successful_scan_at": "2026-08-27T06:33:09.643632+00:00",
   "url_change_recovery_completed": true
 }
