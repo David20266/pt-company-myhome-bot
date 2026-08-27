@@ -5330,13 +5330,14 @@
       "25870037",
       "25870032",
       "25870040",
-      "25870055"
+      "25870055",
+      "25870099"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25870055
+    "myhome_rent": 25870099
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-27T05:08:00.424999+00:00",
+  "last_successful_scan_at": "2026-08-27T05:27:59.075429+00:00",
   "url_change_recovery_completed": true
 }
