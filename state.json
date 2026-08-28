@@ -5616,13 +5616,15 @@
       "25886264",
       "25886262",
       "25512101",
-      "25886207"
+      "25886207",
+      "25886300",
+      "25886297"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25886264
+    "myhome_rent": 25886300
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-28T15:37:57.987598+00:00",
+  "last_successful_scan_at": "2026-08-28T15:58:00.909565+00:00",
   "url_change_recovery_completed": true
 }
