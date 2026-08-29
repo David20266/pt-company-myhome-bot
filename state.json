@@ -5706,13 +5706,15 @@
       "25888599",
       "25888591",
       "25888438",
-      "18518623"
+      "18518623",
+      "25888730",
+      "25888820"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25888640
+    "myhome_rent": 25888820
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-29T09:33:09.400628+00:00",
+  "last_successful_scan_at": "2026-08-29T09:53:00.530674+00:00",
   "url_change_recovery_completed": true
 }
