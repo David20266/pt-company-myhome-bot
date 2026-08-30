@@ -6031,13 +6031,15 @@
       "25897509",
       "25897506",
       "25897489",
-      "25897542"
+      "25897542",
+      "25897628",
+      "25897623"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25897542
+    "myhome_rent": 25897628
   },
   "heartbeat_week": "2026-W35",
-  "last_successful_scan_at": "2026-08-30T19:58:06.377831+00:00",
+  "last_successful_scan_at": "2026-08-30T20:18:01.525737+00:00",
   "url_change_recovery_completed": true
 }
