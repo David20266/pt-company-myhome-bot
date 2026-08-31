@@ -6285,13 +6285,15 @@
       "25908212",
       "25908216",
       "25908208",
-      "25908205"
+      "25908205",
+      "25908282",
+      "25908279"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25908216
+    "myhome_rent": 25908282
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-08-31T20:03:04.863336+00:00",
+  "last_successful_scan_at": "2026-08-31T20:22:59.511011+00:00",
   "url_change_recovery_completed": true
 }
