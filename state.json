@@ -6266,13 +6266,16 @@
       "25907878",
       "25907916",
       "24906108",
-      "25907888"
+      "25907888",
+      "25908006",
+      "25908002",
+      "25907976"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25907916
+    "myhome_rent": 25908006
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-08-31T18:33:01.777722+00:00",
+  "last_successful_scan_at": "2026-08-31T18:53:00.366253+00:00",
   "url_change_recovery_completed": true
 }
