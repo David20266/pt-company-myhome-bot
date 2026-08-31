@@ -6202,13 +6202,15 @@
       "25420625",
       "25904776",
       "25904675",
-      "25904644"
+      "25904644",
+      "25525293",
+      "25904921"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25904776
+    "myhome_rent": 25904921
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-08-31T12:53:01.644187+00:00",
+  "last_successful_scan_at": "2026-08-31T13:08:21.786888+00:00",
   "url_change_recovery_completed": true
 }
