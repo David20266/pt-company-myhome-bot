@@ -6054,13 +6054,15 @@
       "25898122",
       "25898137",
       "25898136",
-      "25898126"
+      "25898126",
+      "25898146",
+      "25898149"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25898137
+    "myhome_rent": 25898149
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-08-31T04:58:00.132967+00:00",
+  "last_successful_scan_at": "2026-08-31T05:12:59.910754+00:00",
   "url_change_recovery_completed": true
 }
