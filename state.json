@@ -6051,13 +6051,16 @@
       "25898061",
       "25898105",
       "25898107",
-      "25898122"
+      "25898122",
+      "25898137",
+      "25898136",
+      "25898126"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25898122
+    "myhome_rent": 25898137
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-08-31T04:38:13.943203+00:00",
+  "last_successful_scan_at": "2026-08-31T04:58:00.132967+00:00",
   "url_change_recovery_completed": true
 }
