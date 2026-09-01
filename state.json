@@ -6312,13 +6312,16 @@
       "16750052",
       "25908638",
       "25908625",
-      "25908624"
+      "25908624",
+      "25908660",
+      "25908725",
+      "25908710"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25908638
+    "myhome_rent": 25908725
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-01T06:23:01.528287+00:00",
+  "last_successful_scan_at": "2026-09-01T06:42:59.112936+00:00",
   "url_change_recovery_completed": true
 }
