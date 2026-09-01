@@ -6490,13 +6490,15 @@
       "24660752",
       "25917277",
       "22285658",
-      "24623137"
+      "24623137",
+      "25917483",
+      "25917650"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25917397
+    "myhome_rent": 25917650
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-01T14:08:01.987396+00:00",
+  "last_successful_scan_at": "2026-09-01T14:27:59.945052+00:00",
   "url_change_recovery_completed": true
 }
