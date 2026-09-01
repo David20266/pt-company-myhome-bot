@@ -6573,13 +6573,15 @@
       "25919203",
       "25919193",
       "25645432",
-      "25919278"
+      "25919278",
+      "25919337",
+      "25919336"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25919278
+    "myhome_rent": 25919337
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-01T21:48:01.102581+00:00",
+  "last_successful_scan_at": "2026-09-01T22:03:14.189671+00:00",
   "url_change_recovery_completed": true
 }
