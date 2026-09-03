@@ -6843,13 +6843,14 @@
       "25931355",
       "25931395",
       "25931391",
-      "25931431"
+      "25931431",
+      "25931482"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25931431
+    "myhome_rent": 25931482
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-03T01:23:20.858057+00:00",
+  "last_successful_scan_at": "2026-09-03T01:43:03.264117+00:00",
   "url_change_recovery_completed": true
 }
