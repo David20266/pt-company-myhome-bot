@@ -6851,13 +6851,16 @@
       "25931531",
       "25931525",
       "25931575",
-      "25931593"
+      "25931593",
+      "25931611",
+      "25931607",
+      "25931606"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25931593
+    "myhome_rent": 25931611
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-03T05:32:59.599050+00:00",
+  "last_successful_scan_at": "2026-09-03T05:47:59.358291+00:00",
   "url_change_recovery_completed": true
 }
