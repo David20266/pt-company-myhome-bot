@@ -7117,13 +7117,15 @@
       "25938316",
       "24685050",
       "18601062",
-      "25944277"
+      "25944277",
+      "25944360",
+      "25944339"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25944277
+    "myhome_rent": 25944360
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-04T06:38:07.820948+00:00",
+  "last_successful_scan_at": "2026-09-04T06:53:03.564439+00:00",
   "url_change_recovery_completed": true
 }
