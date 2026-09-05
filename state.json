@@ -7532,13 +7532,16 @@
       "19026780",
       "18380485",
       "25961724",
-      "25961722"
+      "25961722",
+      "25956595",
+      "25961758",
+      "25961752"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25961724
+    "myhome_rent": 25961758
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-05T17:02:58.384094+00:00",
+  "last_successful_scan_at": "2026-09-05T17:18:12.435626+00:00",
   "url_change_recovery_completed": true
 }
