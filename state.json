@@ -7356,13 +7356,15 @@
       "25955773",
       "25955771",
       "25955833",
-      "25955865"
+      "25955865",
+      "25955881",
+      "25955882"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25955865
+    "myhome_rent": 25955882
   },
   "heartbeat_week": "2026-W36",
-  "last_successful_scan_at": "2026-09-05T04:32:58.469250+00:00",
+  "last_successful_scan_at": "2026-09-05T04:48:01.083347+00:00",
   "url_change_recovery_completed": true
 }
