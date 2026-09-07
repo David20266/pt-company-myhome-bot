@@ -8074,13 +8074,16 @@
       "25977999",
       "20962060",
       "25977958",
-      "25977942"
+      "25977942",
+      "25978092",
+      "25978086",
+      "25227892"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25978041
+    "myhome_rent": 25978092
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-07T18:57:58.772321+00:00",
+  "last_successful_scan_at": "2026-09-07T19:13:06.315524+00:00",
   "url_change_recovery_completed": true
 }
