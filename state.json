@@ -7809,13 +7809,14 @@
       "25966654",
       "24184607",
       "25966659",
-      "25966676"
+      "25966676",
+      "25966683"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25966676
+    "myhome_rent": 25966683
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-07T04:23:37.468142+00:00",
+  "last_successful_scan_at": "2026-09-07T04:42:58.817235+00:00",
   "url_change_recovery_completed": true
 }
