@@ -7810,13 +7810,16 @@
       "24184607",
       "25966659",
       "25966676",
-      "25966683"
+      "25966683",
+      "25966715",
+      "25966711",
+      "25966700"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25966683
+    "myhome_rent": 25966715
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-07T05:03:01.501516+00:00",
+  "last_successful_scan_at": "2026-09-07T05:23:04.096369+00:00",
   "url_change_recovery_completed": true
 }
