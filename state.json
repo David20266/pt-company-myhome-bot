@@ -7845,13 +7845,16 @@
       "25967135",
       "25967127",
       "25967104",
-      "25967081"
+      "25967081",
+      "25967294",
+      "25967404",
+      "25967382"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25967210
+    "myhome_rent": 25967404
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-07T07:27:57.692579+00:00",
+  "last_successful_scan_at": "2026-09-07T07:43:11.965266+00:00",
   "url_change_recovery_completed": true
 }
