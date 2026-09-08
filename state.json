@@ -8301,13 +8301,15 @@
       "25988204",
       "25988254",
       "25988269",
-      "25988168"
+      "25988168",
+      "25988617",
+      "25988500"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25988269
+    "myhome_rent": 25988617
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-08T14:13:03.321556+00:00",
+  "last_successful_scan_at": "2026-09-08T14:28:03.292820+00:00",
   "url_change_recovery_completed": true
 }
