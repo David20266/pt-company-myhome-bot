@@ -8344,13 +8344,16 @@
       "25990022",
       "25990039",
       "25990047",
-      "25990019"
+      "25990019",
+      "25990078",
+      "25990075",
+      "25990062"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25990047
+    "myhome_rent": 25990078
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-08T17:38:01.580161+00:00",
+  "last_successful_scan_at": "2026-09-08T17:53:23.457300+00:00",
   "url_change_recovery_completed": true
 }
