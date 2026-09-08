@@ -8126,13 +8126,16 @@
       "25978760",
       "25978758",
       "19939582",
-      "25978744"
+      "25978744",
+      "25978866",
+      "25978862",
+      "25978821"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25978792
+    "myhome_rent": 25978866
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-08T07:03:02.406363+00:00",
+  "last_successful_scan_at": "2026-09-08T07:23:01.496636+00:00",
   "url_change_recovery_completed": true
 }
