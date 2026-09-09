@@ -8429,13 +8429,16 @@
       "25991937",
       "25668286",
       "25991785",
-      "25991716"
+      "25991716",
+      "22894035",
+      "25992050",
+      "25992389"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25991939
+    "myhome_rent": 25992389
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T08:02:58.545790+00:00",
+  "last_successful_scan_at": "2026-09-09T08:18:07.554942+00:00",
   "url_change_recovery_completed": true
 }
