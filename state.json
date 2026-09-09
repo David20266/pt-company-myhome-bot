@@ -8571,13 +8571,16 @@
       "26001760",
       "26001918",
       "26001902",
-      "22165587"
+      "22165587",
+      "26002049",
+      "26002029",
+      "26001977"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26001918
+    "myhome_rent": 26002049
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T16:38:16.758546+00:00",
+  "last_successful_scan_at": "2026-09-09T16:58:15.565976+00:00",
   "url_change_recovery_completed": true
 }
