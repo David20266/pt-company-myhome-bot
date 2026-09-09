@@ -8552,13 +8552,15 @@
       "25990664",
       "26001091",
       "26001207",
-      "26001213"
+      "26001213",
+      "26001437",
+      "26001423"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26001213
+    "myhome_rent": 26001437
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T14:48:06.618081+00:00",
+  "last_successful_scan_at": "2026-09-09T15:03:07.584899+00:00",
   "url_change_recovery_completed": true
 }
