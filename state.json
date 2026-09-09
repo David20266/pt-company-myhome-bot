@@ -8563,13 +8563,15 @@
       "26001498",
       "26001472",
       "26001707",
-      "26001641"
+      "26001641",
+      "26001730",
+      "26001722"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26001707
+    "myhome_rent": 26001730
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T15:43:01.427021+00:00",
+  "last_successful_scan_at": "2026-09-09T15:58:02.960310+00:00",
   "url_change_recovery_completed": true
 }
