@@ -8619,13 +8619,14 @@
       "26002876",
       "26002963",
       "26002969",
-      "26002954"
+      "26002954",
+      "26002987"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26002969
+    "myhome_rent": 26002987
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T22:28:04.539277+00:00",
+  "last_successful_scan_at": "2026-09-09T22:47:58.499879+00:00",
   "url_change_recovery_completed": true
 }
