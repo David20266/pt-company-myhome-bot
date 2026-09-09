@@ -8405,13 +8405,14 @@
       "24556866",
       "25990864",
       "25990861",
-      "25990856"
+      "25990856",
+      "25990897"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25990864
+    "myhome_rent": 25990897
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T06:03:01.439146+00:00",
+  "last_successful_scan_at": "2026-09-09T06:18:06.944705+00:00",
   "url_change_recovery_completed": true
 }
