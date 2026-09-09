@@ -8406,13 +8406,16 @@
       "25990864",
       "25990861",
       "25990856",
-      "25990897"
+      "25990897",
+      "25990950",
+      "25990933",
+      "25897790"
     ]
   },
   "max_ids": {
-    "myhome_rent": 25990897
+    "myhome_rent": 25990950
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T06:18:06.944705+00:00",
+  "last_successful_scan_at": "2026-09-09T06:32:59.197520+00:00",
   "url_change_recovery_completed": true
 }
