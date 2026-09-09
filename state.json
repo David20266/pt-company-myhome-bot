@@ -8568,13 +8568,16 @@
       "26001722",
       "26001842",
       "26001822",
-      "26001760"
+      "26001760",
+      "26001918",
+      "26001902",
+      "22165587"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26001842
+    "myhome_rent": 26001918
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-09T16:18:21.125907+00:00",
+  "last_successful_scan_at": "2026-09-09T16:38:16.758546+00:00",
   "url_change_recovery_completed": true
 }
