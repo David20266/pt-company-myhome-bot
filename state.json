@@ -8652,13 +8652,16 @@
       "18987032",
       "26003422",
       "26003377",
-      "25612688"
+      "25612688",
+      "26003474",
+      "26003538",
+      "26003453"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26003422
+    "myhome_rent": 26003538
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T07:03:28.738642+00:00",
+  "last_successful_scan_at": "2026-09-10T07:23:14.509211+00:00",
   "url_change_recovery_completed": true
 }
