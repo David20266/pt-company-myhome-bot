@@ -8632,13 +8632,14 @@
       "26003088",
       "26003130",
       "26003125",
-      "26003115"
+      "26003115",
+      "26003146"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26003130
+    "myhome_rent": 26003146
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T05:22:58.948248+00:00",
+  "last_successful_scan_at": "2026-09-10T05:37:58.373815+00:00",
   "url_change_recovery_completed": true
 }
