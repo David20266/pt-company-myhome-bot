@@ -8621,13 +8621,14 @@
       "26002969",
       "26002954",
       "26002987",
-      "26003021"
+      "26003021",
+      "22163928"
     ]
   },
   "max_ids": {
     "myhome_rent": 26003021
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T03:47:58.965857+00:00",
+  "last_successful_scan_at": "2026-09-10T04:03:00.369269+00:00",
   "url_change_recovery_completed": true
 }
