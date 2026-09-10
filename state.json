@@ -8776,13 +8776,15 @@
       "26012575",
       "26012535",
       "26012460",
-      "26012394"
+      "26012394",
+      "26013022",
+      "26012947"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26012706
+    "myhome_rent": 26013022
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T14:33:03.813393+00:00",
+  "last_successful_scan_at": "2026-09-10T14:52:59.944889+00:00",
   "url_change_recovery_completed": true
 }
