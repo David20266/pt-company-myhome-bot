@@ -8857,13 +8857,14 @@
       "26014394",
       "26014392",
       "23884074",
-      "26014382"
+      "26014382",
+      "26014454"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26014394
+    "myhome_rent": 26014454
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T20:28:00.267076+00:00",
+  "last_successful_scan_at": "2026-09-10T20:48:07.252875+00:00",
   "url_change_recovery_completed": true
 }
