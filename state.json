@@ -8807,13 +8807,15 @@
       "26013482",
       "26013591",
       "25404755",
-      "26013544"
+      "26013544",
+      "26013645",
+      "26013638"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26013591
+    "myhome_rent": 26013645
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T16:43:00.348960+00:00",
+  "last_successful_scan_at": "2026-09-10T16:58:02.652027+00:00",
   "url_change_recovery_completed": true
 }
