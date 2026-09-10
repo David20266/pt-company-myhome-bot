@@ -8786,13 +8786,16 @@
       "26013178",
       "26013148",
       "26013141",
-      "26013275"
+      "26013275",
+      "26013399",
+      "26013365",
+      "26013356"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26013275
+    "myhome_rent": 26013399
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T15:22:59.597265+00:00",
+  "last_successful_scan_at": "2026-09-10T15:43:01.773088+00:00",
   "url_change_recovery_completed": true
 }
