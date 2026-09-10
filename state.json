@@ -8672,13 +8672,15 @@
       "26004901",
       "26004826",
       "26004721",
-      "26004621"
+      "26004621",
+      "26005360",
+      "26005092"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26004901
+    "myhome_rent": 26005360
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-10T08:32:59.990354+00:00",
+  "last_successful_scan_at": "2026-09-10T08:47:59.995145+00:00",
   "url_change_recovery_completed": true
 }
