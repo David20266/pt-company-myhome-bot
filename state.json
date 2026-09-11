@@ -8881,13 +8881,16 @@
       "26014890",
       "26014882",
       "26014876",
-      "24146109"
+      "24146109",
+      "26014985",
+      "26014941",
+      "26014933"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26014890
+    "myhome_rent": 26014985
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T06:43:00.363724+00:00",
+  "last_successful_scan_at": "2026-09-11T07:03:18.110449+00:00",
   "url_change_recovery_completed": true
 }
