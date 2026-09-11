@@ -8889,13 +8889,15 @@
       "26015160",
       "26015108",
       "26015103",
-      "26015013"
+      "26015013",
+      "26015349",
+      "26015220"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26015160
+    "myhome_rent": 26015349
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T07:23:01.916132+00:00",
+  "last_successful_scan_at": "2026-09-11T07:43:17.405176+00:00",
   "url_change_recovery_completed": true
 }
