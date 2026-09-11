@@ -8917,13 +8917,15 @@
       "26017373",
       "26017285",
       "26017241",
-      "26017050"
+      "26017050",
+      "26017674",
+      "26017537"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26017390
+    "myhome_rent": 26017674
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T09:18:12.956414+00:00",
+  "last_successful_scan_at": "2026-09-11T09:33:11.916045+00:00",
   "url_change_recovery_completed": true
 }
