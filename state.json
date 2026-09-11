@@ -9038,13 +9038,14 @@
       "26026115",
       "26026100",
       "26026163",
-      "26026154"
+      "26026154",
+      "26026171"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26026163
+    "myhome_rent": 26026171
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T20:52:58.402643+00:00",
+  "last_successful_scan_at": "2026-09-11T21:08:02.456099+00:00",
   "url_change_recovery_completed": true
 }
