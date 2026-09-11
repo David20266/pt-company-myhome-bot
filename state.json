@@ -9011,13 +9011,15 @@
       "26025566",
       "26025565",
       "26025541",
-      "26025476"
+      "26025476",
+      "26025614",
+      "26025596"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26025566
+    "myhome_rent": 26025614
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T16:17:58.360225+00:00",
+  "last_successful_scan_at": "2026-09-11T16:37:58.155355+00:00",
   "url_change_recovery_completed": true
 }
