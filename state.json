@@ -9029,13 +9029,15 @@
       "26025906",
       "26025897",
       "26025970",
-      "26026011"
+      "26026011",
+      "26026039",
+      "26026031"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26026011
+    "myhome_rent": 26026039
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-11T19:23:11.863578+00:00",
+  "last_successful_scan_at": "2026-09-11T19:42:59.400735+00:00",
   "url_change_recovery_completed": true
 }
