@@ -9154,13 +9154,15 @@
       "26029940",
       "26029875",
       "26026511",
-      "26025371"
+      "26025371",
+      "26030106",
+      "26029985"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26029976
+    "myhome_rent": 26030106
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-12T11:52:57.189299+00:00",
+  "last_successful_scan_at": "2026-09-12T12:08:01.493434+00:00",
   "url_change_recovery_completed": true
 }
