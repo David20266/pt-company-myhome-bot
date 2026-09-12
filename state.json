@@ -9110,13 +9110,16 @@
       "26027785",
       "26027676",
       "26027651",
-      "25578975"
+      "25578975",
+      "26028024",
+      "26027907",
+      "26027810"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26027785
+    "myhome_rent": 26028024
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-12T09:13:11.221065+00:00",
+  "last_successful_scan_at": "2026-09-12T09:32:59.417597+00:00",
   "url_change_recovery_completed": true
 }
