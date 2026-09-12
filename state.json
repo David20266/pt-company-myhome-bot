@@ -9070,13 +9070,16 @@
       "26026595",
       "26026577",
       "26026576",
-      "26026574"
+      "26026574",
+      "26026653",
+      "26026638",
+      "26026631"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26026610
+    "myhome_rent": 26026653
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-12T07:12:57.559722+00:00",
+  "last_successful_scan_at": "2026-09-12T07:28:01.753848+00:00",
   "url_change_recovery_completed": true
 }
