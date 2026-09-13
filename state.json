@@ -9453,13 +9453,14 @@
       "18521138",
       "26037360",
       "23398427",
-      "21813297"
+      "21813297",
+      "26037484"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26037391
+    "myhome_rent": 26037484
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T19:42:59.274045+00:00",
+  "last_successful_scan_at": "2026-09-13T20:03:08.056728+00:00",
   "url_change_recovery_completed": true
 }
