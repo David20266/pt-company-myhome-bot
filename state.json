@@ -9295,13 +9295,15 @@
       "26034180",
       "26034168",
       "26034147",
-      "26034100"
+      "26034100",
+      "26034255",
+      "26034217"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26034184
+    "myhome_rent": 26034255
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T09:18:02.257323+00:00",
+  "last_successful_scan_at": "2026-09-13T09:32:59.006291+00:00",
   "url_change_recovery_completed": true
 }
