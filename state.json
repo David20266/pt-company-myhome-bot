@@ -9261,13 +9261,14 @@
       "26033465",
       "26033460",
       "26033461",
-      "26033455"
+      "26033455",
+      "26033485"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26033465
+    "myhome_rent": 26033485
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T06:17:57.751776+00:00",
+  "last_successful_scan_at": "2026-09-13T06:33:00.017846+00:00",
   "url_change_recovery_completed": true
 }
