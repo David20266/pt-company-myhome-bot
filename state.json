@@ -9280,13 +9280,14 @@
       "26033742",
       "26033730",
       "26033728",
-      "26033717"
+      "26033717",
+      "26033773"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26033742
+    "myhome_rent": 26033773
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T08:08:00.730858+00:00",
+  "last_successful_scan_at": "2026-09-13T08:23:02.365279+00:00",
   "url_change_recovery_completed": true
 }
