@@ -9444,13 +9444,16 @@
       "26037239",
       "26037234",
       "21850249",
-      "26037270"
+      "26037270",
+      "26037350",
+      "26037347",
+      "26037339"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26037270
+    "myhome_rent": 26037350
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T18:58:10.084646+00:00",
+  "last_successful_scan_at": "2026-09-13T19:13:06.642210+00:00",
   "url_change_recovery_completed": true
 }
