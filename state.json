@@ -9288,13 +9288,14 @@
       "24069908",
       "26033885",
       "26033872",
-      "26033835"
+      "26033835",
+      "26034056"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26033914
+    "myhome_rent": 26034056
   },
   "heartbeat_week": "2026-W37",
-  "last_successful_scan_at": "2026-09-13T08:42:58.649212+00:00",
+  "last_successful_scan_at": "2026-09-13T08:57:59.140463+00:00",
   "url_change_recovery_completed": true
 }
