@@ -9476,13 +9476,16 @@
       "22579546",
       "23990484",
       "26038340",
-      "26038311"
+      "26038311",
+      "26038498",
+      "21020504",
+      "26038416"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26038340
+    "myhome_rent": 26038498
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-14T06:58:10.376961+00:00",
+  "last_successful_scan_at": "2026-09-14T07:18:02.057048+00:00",
   "url_change_recovery_completed": true
 }
