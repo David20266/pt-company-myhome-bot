@@ -9517,13 +9517,16 @@
       "26040116",
       "26040094",
       "26039838",
-      "26039835"
+      "26039835",
+      "26040601",
+      "26040533",
+      "26040358"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26040147
+    "myhome_rent": 26040601
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-14T08:48:07.793181+00:00",
+  "last_successful_scan_at": "2026-09-14T09:03:01.274705+00:00",
   "url_change_recovery_completed": true
 }
