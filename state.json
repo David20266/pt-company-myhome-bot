@@ -9781,13 +9781,15 @@
       "26053307",
       "26053210",
       "26053083",
-      "26051073"
+      "26051073",
+      "26053576",
+      "26053486"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26053454
+    "myhome_rent": 26053576
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-15T09:58:08.545047+00:00",
+  "last_successful_scan_at": "2026-09-15T10:13:02.332112+00:00",
   "url_change_recovery_completed": true
 }
