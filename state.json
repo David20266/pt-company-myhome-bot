@@ -9731,13 +9731,16 @@
       "26050039",
       "26050036",
       "26050027",
-      "26050030"
+      "26050030",
+      "26050125",
+      "26050145",
+      "26050131"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26050072
+    "myhome_rent": 26050145
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-15T06:53:07.460936+00:00",
+  "last_successful_scan_at": "2026-09-15T07:08:05.645243+00:00",
   "url_change_recovery_completed": true
 }
