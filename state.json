@@ -9705,13 +9705,14 @@
       "26049748",
       "26049773",
       "26049810",
-      "26049820"
+      "26049820",
+      "25109437"
     ]
   },
   "max_ids": {
     "myhome_rent": 26049820
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-15T04:28:02.861980+00:00",
+  "last_successful_scan_at": "2026-09-15T04:48:10.139531+00:00",
   "url_change_recovery_completed": true
 }
