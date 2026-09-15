@@ -9888,13 +9888,16 @@
       "26060276",
       "26060271",
       "26060338",
-      "26060321"
+      "26060321",
+      "26060355",
+      "26060387",
+      "26060371"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26060338
+    "myhome_rent": 26060387
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-15T18:53:00.329957+00:00",
+  "last_successful_scan_at": "2026-09-15T19:08:17.513650+00:00",
   "url_change_recovery_completed": true
 }
