@@ -9897,13 +9897,14 @@
       "26060444",
       "26060427",
       "26060419",
-      "26060411"
+      "26060411",
+      "26060513"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26060458
+    "myhome_rent": 26060513
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-15T19:27:58.950773+00:00",
+  "last_successful_scan_at": "2026-09-15T19:48:17.849635+00:00",
   "url_change_recovery_completed": true
 }
