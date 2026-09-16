@@ -10023,13 +10023,16 @@
       "26065063",
       "26065448",
       "26065221",
-      "26065021"
+      "26065021",
+      "26065646",
+      "26065573",
+      "26065547"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26065448
+    "myhome_rent": 26065646
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-16T10:43:21.070515+00:00",
+  "last_successful_scan_at": "2026-09-16T10:58:10.817530+00:00",
   "url_change_recovery_completed": true
 }
