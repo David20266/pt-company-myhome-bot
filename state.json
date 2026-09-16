@@ -10139,13 +10139,16 @@
       "26072202",
       "26072168",
       "26072167",
-      "26072147"
+      "26072147",
+      "26072304",
+      "26072266",
+      "26072231"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26072218
+    "myhome_rent": 26072304
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-16T19:03:08.128853+00:00",
+  "last_successful_scan_at": "2026-09-16T19:23:02.525039+00:00",
   "url_change_recovery_completed": true
 }
