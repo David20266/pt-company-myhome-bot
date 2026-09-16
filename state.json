@@ -9912,13 +9912,16 @@
       "26060683",
       "26060811",
       "26060832",
-      "26060855"
+      "26060855",
+      "26060873",
+      "26060881",
+      "26060871"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26060855
+    "myhome_rent": 26060881
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-16T04:38:00.324597+00:00",
+  "last_successful_scan_at": "2026-09-16T04:58:05.764281+00:00",
   "url_change_recovery_completed": true
 }
