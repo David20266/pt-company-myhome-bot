@@ -10122,13 +10122,15 @@
       "26071742",
       "26071736",
       "26071833",
-      "26071922"
+      "26071922",
+      "25574008",
+      "26071962"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26071922
+    "myhome_rent": 26071962
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-16T17:53:00.913790+00:00",
+  "last_successful_scan_at": "2026-09-16T18:08:06.450219+00:00",
   "url_change_recovery_completed": true
 }
