@@ -10363,13 +10363,15 @@
       "26083391",
       "26083384",
       "26083372",
-      "26083359"
+      "26083359",
+      "26083465",
+      "26083433"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26083391
+    "myhome_rent": 26083465
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-17T18:28:03.032000+00:00",
+  "last_successful_scan_at": "2026-09-17T18:43:01.712624+00:00",
   "url_change_recovery_completed": true
 }
