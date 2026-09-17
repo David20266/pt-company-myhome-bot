@@ -10162,13 +10162,16 @@
       "26072665",
       "26072637",
       "22465354",
-      "26072627"
+      "26072627",
+      "26072709",
+      "26072639",
+      "24898357"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26072665
+    "myhome_rent": 26072709
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-17T06:08:34.692892+00:00",
+  "last_successful_scan_at": "2026-09-17T06:27:59.319213+00:00",
   "url_change_recovery_completed": true
 }
