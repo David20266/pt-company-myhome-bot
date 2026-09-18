@@ -10528,13 +10528,16 @@
       "26092600",
       "26092395",
       "26092337",
-      "26092295"
+      "26092295",
+      "26093039",
+      "26092715",
+      "26092636"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26092600
+    "myhome_rent": 26093039
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-18T13:43:07.237333+00:00",
+  "last_successful_scan_at": "2026-09-18T14:03:01.927643+00:00",
   "url_change_recovery_completed": true
 }
