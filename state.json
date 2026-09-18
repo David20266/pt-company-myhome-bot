@@ -10419,13 +10419,14 @@
       "26084224",
       "26084216",
       "26084359",
-      "26084330"
+      "26084330",
+      "26077629"
     ]
   },
   "max_ids": {
     "myhome_rent": 26084359
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-18T07:18:20.009044+00:00",
+  "last_successful_scan_at": "2026-09-18T07:37:59.831509+00:00",
   "url_change_recovery_completed": true
 }
