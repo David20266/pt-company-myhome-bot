@@ -10918,13 +10918,16 @@
       "26104772",
       "26104756",
       "26104752",
-      "26104880"
+      "26104880",
+      "26104968",
+      "26104989",
+      "26104935"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26104880
+    "myhome_rent": 26104989
   },
   "heartbeat_week": "2026-W38",
-  "last_successful_scan_at": "2026-09-20T13:48:00.135970+00:00",
+  "last_successful_scan_at": "2026-09-20T14:08:01.825678+00:00",
   "url_change_recovery_completed": true
 }
