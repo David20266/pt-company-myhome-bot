@@ -11114,13 +11114,15 @@
       "26114409",
       "26114336",
       "26114333",
-      "26114237"
+      "26114237",
+      "26114923",
+      "26114802"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26114627
+    "myhome_rent": 26114923
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-21T13:27:59.640822+00:00",
+  "last_successful_scan_at": "2026-09-21T13:43:01.611930+00:00",
   "url_change_recovery_completed": true
 }
