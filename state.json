@@ -11160,13 +11160,16 @@
       "26117296",
       "25345119",
       "26117331",
-      "26117363"
+      "26117363",
+      "26117436",
+      "26117419",
+      "26117396"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26117363
+    "myhome_rent": 26117436
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-21T18:13:04.396509+00:00",
+  "last_successful_scan_at": "2026-09-21T18:28:04.267978+00:00",
   "url_change_recovery_completed": true
 }
