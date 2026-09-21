@@ -11180,13 +11180,15 @@
       "26117621",
       "26117668",
       "26117694",
-      "23441467"
+      "23441467",
+      "26117706",
+      "26117737"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26117694
+    "myhome_rent": 26117737
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-21T20:18:37.334032+00:00",
+  "last_successful_scan_at": "2026-09-21T20:33:11.036508+00:00",
   "url_change_recovery_completed": true
 }
