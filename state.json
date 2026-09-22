@@ -11368,13 +11368,16 @@
       "26129252",
       "26129304",
       "26129289",
-      "26129272"
+      "26129272",
+      "26129381",
+      "26129369",
+      "24830309"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26129304
+    "myhome_rent": 26129381
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-22T16:33:06.857982+00:00",
+  "last_successful_scan_at": "2026-09-22T16:53:01.537237+00:00",
   "url_change_recovery_completed": true
 }
