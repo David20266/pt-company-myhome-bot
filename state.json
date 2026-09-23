@@ -11510,13 +11510,16 @@
       "26136577",
       "26137066",
       "26137027",
-      "26137000"
+      "26137000",
+      "20673086",
+      "26137187",
+      "26137136"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26137066
+    "myhome_rent": 26137187
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-23T12:07:59.722074+00:00",
+  "last_successful_scan_at": "2026-09-23T12:23:05.768197+00:00",
   "url_change_recovery_completed": true
 }
