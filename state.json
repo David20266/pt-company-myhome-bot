@@ -11666,13 +11666,16 @@
       "25664098",
       "26145475",
       "26145443",
-      "26145426"
+      "26145426",
+      "25109764",
+      "18603486",
+      "26145767"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26145676
+    "myhome_rent": 26145767
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-24T09:23:10.904585+00:00",
+  "last_successful_scan_at": "2026-09-24T09:43:00.339705+00:00",
   "url_change_recovery_completed": true
 }
