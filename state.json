@@ -11771,13 +11771,15 @@
       "26153497",
       "26153461",
       "26153457",
-      "26153435"
+      "26153435",
+      "26153696",
+      "26153662"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26153497
+    "myhome_rent": 26153696
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-24T15:18:04.778309+00:00",
+  "last_successful_scan_at": "2026-09-24T15:38:03.391602+00:00",
   "url_change_recovery_completed": true
 }
