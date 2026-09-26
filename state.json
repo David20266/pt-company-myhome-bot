@@ -12103,13 +12103,14 @@
       "26172568",
       "26172558",
       "26172553",
-      "26172476"
+      "26172476",
+      "26172700"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26172579
+    "myhome_rent": 26172700
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-26T14:27:59.330430+00:00",
+  "last_successful_scan_at": "2026-09-26T14:42:59.467523+00:00",
   "url_change_recovery_completed": true
 }
