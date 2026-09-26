@@ -12131,13 +12131,15 @@
       "26173331",
       "26173342",
       "26173358",
-      "26173338"
+      "26173338",
+      "26173375",
+      "26173382"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26173358
+    "myhome_rent": 26173382
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-26T17:53:00.486568+00:00",
+  "last_successful_scan_at": "2026-09-26T18:08:03.452140+00:00",
   "url_change_recovery_completed": true
 }
