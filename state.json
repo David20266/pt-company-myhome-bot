@@ -12204,13 +12204,15 @@
       "26175055",
       "26175038",
       "26175144",
-      "18639055"
+      "18639055",
+      "26175198",
+      "26175192"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26175144
+    "myhome_rent": 26175198
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-27T11:12:59.545682+00:00",
+  "last_successful_scan_at": "2026-09-27T11:28:33.667770+00:00",
   "url_change_recovery_completed": true
 }
