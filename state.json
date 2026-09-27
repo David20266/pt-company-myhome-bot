@@ -12261,13 +12261,16 @@
       "26176513",
       "26176581",
       "26176569",
-      "26176614"
+      "26176614",
+      "26108453",
+      "26176637",
+      "26176612"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26176614
+    "myhome_rent": 26176637
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-27T16:38:04.622347+00:00",
+  "last_successful_scan_at": "2026-09-27T16:58:00.198091+00:00",
   "url_change_recovery_completed": true
 }
