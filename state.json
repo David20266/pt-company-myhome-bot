@@ -12202,13 +12202,15 @@
       "26175051",
       "26175081",
       "26175055",
-      "26175038"
+      "26175038",
+      "26175144",
+      "18639055"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26175081
+    "myhome_rent": 26175144
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-27T10:53:00.322850+00:00",
+  "last_successful_scan_at": "2026-09-27T11:12:59.545682+00:00",
   "url_change_recovery_completed": true
 }
