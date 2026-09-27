@@ -12169,13 +12169,15 @@
       "26173958",
       "26174033",
       "26174028",
-      "26174137"
+      "26174137",
+      "26174187",
+      "26174219"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26174137
+    "myhome_rent": 26174219
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-27T08:08:04.484320+00:00",
+  "last_successful_scan_at": "2026-09-27T08:28:03.052676+00:00",
   "url_change_recovery_completed": true
 }
