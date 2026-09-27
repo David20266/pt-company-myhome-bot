@@ -12260,13 +12260,14 @@
       "26176452",
       "26176513",
       "26176581",
-      "26176569"
+      "26176569",
+      "26176614"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26176581
+    "myhome_rent": 26176614
   },
   "heartbeat_week": "2026-W39",
-  "last_successful_scan_at": "2026-09-27T16:17:59.738600+00:00",
+  "last_successful_scan_at": "2026-09-27T16:38:04.622347+00:00",
   "url_change_recovery_completed": true
 }
