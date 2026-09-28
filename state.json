@@ -12461,13 +12461,15 @@
       "26187837",
       "26187821",
       "26187880",
-      "26187868"
+      "26187868",
+      "25133924",
+      "26187899"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26187880
+    "myhome_rent": 26187899
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-28T19:58:05.614948+00:00",
+  "last_successful_scan_at": "2026-09-28T20:18:05.052876+00:00",
   "url_change_recovery_completed": true
 }
