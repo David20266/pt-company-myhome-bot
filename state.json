@@ -12345,13 +12345,15 @@
       "26180502",
       "26180466",
       "26180440",
-      "26180317"
+      "26180317",
+      "26180681",
+      "26180544"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26180502
+    "myhome_rent": 26180681
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-28T09:53:01.746086+00:00",
+  "last_successful_scan_at": "2026-09-28T10:08:00.081167+00:00",
   "url_change_recovery_completed": true
 }
