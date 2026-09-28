@@ -12433,13 +12433,14 @@
       "26187150",
       "26187216",
       "26187293",
-      "26187140"
+      "26187140",
+      "26187351"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26187293
+    "myhome_rent": 26187351
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-28T16:03:17.792301+00:00",
+  "last_successful_scan_at": "2026-09-28T16:23:03.750658+00:00",
   "url_change_recovery_completed": true
 }
