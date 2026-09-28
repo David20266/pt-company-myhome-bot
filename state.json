@@ -12290,13 +12290,14 @@
       "26176901",
       "24568317",
       "26176908",
-      "26176945"
+      "26176945",
+      "25311192"
     ]
   },
   "max_ids": {
     "myhome_rent": 26176986
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-28T00:43:12.526948+00:00",
+  "last_successful_scan_at": "2026-09-28T01:02:58.848644+00:00",
   "url_change_recovery_completed": true
 }
