@@ -12661,13 +12661,16 @@
       "26199575",
       "26199662",
       "26199657",
-      "26199646"
+      "26199646",
+      "26199726",
+      "26199704",
+      "26199688"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26199662
+    "myhome_rent": 26199726
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-29T18:49:12.030316+00:00",
+  "last_successful_scan_at": "2026-09-29T19:08:14.651963+00:00",
   "url_change_recovery_completed": true
 }
