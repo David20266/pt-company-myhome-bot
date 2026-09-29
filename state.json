@@ -12506,13 +12506,16 @@
       "26188872",
       "26188712",
       "26188709",
-      "26188708"
+      "26188708",
+      "26189094",
+      "26188933",
+      "26188850"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26188872
+    "myhome_rent": 26189094
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-29T07:33:15.185216+00:00",
+  "last_successful_scan_at": "2026-09-29T07:48:02.514857+00:00",
   "url_change_recovery_completed": true
 }
