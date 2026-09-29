@@ -12599,13 +12599,16 @@
       "26193993",
       "26194502",
       "26194373",
-      "26194318"
+      "26194318",
+      "26194737",
+      "26194619",
+      "26194612"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26194502
+    "myhome_rent": 26194737
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-29T11:58:01.080433+00:00",
+  "last_successful_scan_at": "2026-09-29T12:13:02.121778+00:00",
   "url_change_recovery_completed": true
 }
