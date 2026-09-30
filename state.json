@@ -12675,13 +12675,14 @@
       "26200077",
       "26200070",
       "26200093",
-      "26200151"
+      "26200151",
+      "26200214"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26200151
+    "myhome_rent": 26200214
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-30T03:33:01.644079+00:00",
+  "last_successful_scan_at": "2026-09-30T03:53:00.927143+00:00",
   "url_change_recovery_completed": true
 }
