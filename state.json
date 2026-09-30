@@ -12682,13 +12682,16 @@
       "26200261",
       "26200254",
       "26200281",
-      "26200266"
+      "26200266",
+      "26200305",
+      "26200313",
+      "26200306"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26200281
+    "myhome_rent": 26200313
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-30T06:08:04.575388+00:00",
+  "last_successful_scan_at": "2026-09-30T06:28:02.363533+00:00",
   "url_change_recovery_completed": true
 }
