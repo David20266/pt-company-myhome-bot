@@ -12678,13 +12678,15 @@
       "26200151",
       "26200214",
       "26200234",
-      "26200242"
+      "26200242",
+      "26200261",
+      "26200254"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26200242
+    "myhome_rent": 26200261
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-30T05:33:01.344100+00:00",
+  "last_successful_scan_at": "2026-09-30T05:53:00.474164+00:00",
   "url_change_recovery_completed": true
 }
