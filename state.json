@@ -12749,13 +12749,15 @@
       "26204123",
       "26204069",
       "26204017",
-      "26204389"
+      "26204389",
+      "26204441",
+      "26203364"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26204389
+    "myhome_rent": 26204441
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-09-30T10:58:03.200917+00:00",
+  "last_successful_scan_at": "2026-09-30T11:18:14.925937+00:00",
   "url_change_recovery_completed": true
 }
