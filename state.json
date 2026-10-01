@@ -12899,13 +12899,16 @@
       "26210281",
       "26210685",
       "26210674",
-      "26210633"
+      "26210633",
+      "26211008",
+      "26210966",
+      "26210905"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26210685
+    "myhome_rent": 26211008
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-10-01T07:33:07.636527+00:00",
+  "last_successful_scan_at": "2026-10-01T07:53:02.883197+00:00",
   "url_change_recovery_completed": true
 }
