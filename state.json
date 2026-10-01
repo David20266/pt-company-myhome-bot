@@ -13059,13 +13059,15 @@
       "26219947",
       "26219946",
       "26219941",
-      "26219924"
+      "26219924",
+      "26220047",
+      "26219772"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26219959
+    "myhome_rent": 26220047
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-10-01T16:33:02.100613+00:00",
+  "last_successful_scan_at": "2026-10-01T16:48:11.107915+00:00",
   "url_change_recovery_completed": true
 }
