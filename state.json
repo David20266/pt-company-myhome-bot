@@ -13109,13 +13109,14 @@
       "26220699",
       "26220694",
       "23317707",
-      "26220764"
+      "26220764",
+      "26220787"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26220764
+    "myhome_rent": 26220787
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-10-02T04:33:01.070078+00:00",
+  "last_successful_scan_at": "2026-10-02T04:53:00.783115+00:00",
   "url_change_recovery_completed": true
 }
