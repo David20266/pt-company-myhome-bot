@@ -13498,13 +13498,14 @@
       "26238539",
       "26238535",
       "26238529",
-      "26238512"
+      "26238512",
+      "26238547"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26238539
+    "myhome_rent": 26238547
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-10-03T20:13:02.576938+00:00",
+  "last_successful_scan_at": "2026-10-03T20:33:13.541418+00:00",
   "url_change_recovery_completed": true
 }
