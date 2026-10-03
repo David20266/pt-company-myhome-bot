@@ -13466,13 +13466,16 @@
       "26237924",
       "26237956",
       "26237917",
-      "26237918"
+      "26237918",
+      "26238018",
+      "26238017",
+      "26238006"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26237956
+    "myhome_rent": 26238018
   },
   "heartbeat_week": "2026-W40",
-  "last_successful_scan_at": "2026-10-03T15:48:05.526897+00:00",
+  "last_successful_scan_at": "2026-10-03T16:08:05.160665+00:00",
   "url_change_recovery_completed": true
 }
