@@ -13784,13 +13784,15 @@
       "26251221",
       "26251624",
       "26251328",
-      "26251338"
+      "26251338",
+      "26252041",
+      "26247952"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26251624
+    "myhome_rent": 26252041
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-05T14:03:00.473694+00:00",
+  "last_successful_scan_at": "2026-10-05T14:23:03.526843+00:00",
   "url_change_recovery_completed": true
 }
