@@ -13731,13 +13731,16 @@
       "26246614",
       "26246567",
       "26246558",
-      "26243617"
+      "26243617",
+      "24150490",
+      "26247206",
+      "26247101"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26246834
+    "myhome_rent": 26247206
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-05T10:43:00.866726+00:00",
+  "last_successful_scan_at": "2026-10-05T11:03:10.653879+00:00",
   "url_change_recovery_completed": true
 }
