@@ -14201,13 +14201,14 @@
       "26277349",
       "26277366",
       "26277328",
-      "26277345"
+      "26277345",
+      "26277400"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26277366
+    "myhome_rent": 26277400
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-07T16:33:02.161586+00:00",
+  "last_successful_scan_at": "2026-10-07T16:48:18.396051+00:00",
   "url_change_recovery_completed": true
 }
