@@ -14216,13 +14216,15 @@
       "22138716",
       "22130678",
       "26277528",
-      "25872560"
+      "25872560",
+      "26277602",
+      "26277597"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26277554
+    "myhome_rent": 26277602
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-07T17:43:13.411083+00:00",
+  "last_successful_scan_at": "2026-10-07T18:03:21.107830+00:00",
   "url_change_recovery_completed": true
 }
