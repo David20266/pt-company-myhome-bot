@@ -14189,13 +14189,15 @@
       "26277069",
       "26277038",
       "25407316",
-      "26276939"
+      "26276939",
+      "26277203",
+      "26277168"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26277069
+    "myhome_rent": 26277203
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-07T15:18:01.396961+00:00",
+  "last_successful_scan_at": "2026-10-07T15:33:05.974704+00:00",
   "url_change_recovery_completed": true
 }
