@@ -14369,13 +14369,15 @@
       "26285414",
       "26285178",
       "26285362",
-      "26285138"
+      "26285138",
+      "26285735",
+      "26285731"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26285414
+    "myhome_rent": 26285735
   },
   "heartbeat_week": "2026-W41",
-  "last_successful_scan_at": "2026-10-08T12:23:12.070274+00:00",
+  "last_successful_scan_at": "2026-10-08T12:42:59.513495+00:00",
   "url_change_recovery_completed": true
 }
