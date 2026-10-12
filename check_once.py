@@ -55,16 +55,8 @@ SOURCES = [
         "url": (
             "https://www.myhome.ge/en/real-estate/rent/apartment/tbilisi/"
             "?deal_types=2&real_estate_types=1%2C2%2C3"
-            "&cities=1&urbans=38%2C39%2C40%2C41%2C42%2C43%2C44%2C45"
-            "%2C47%2C101%2C28%2C48%2C106%2C111%2C30%2C46%2C121%2C29"
-            "%2C52%2C53%2C54%2C55%2C78%2C117%2C49%2C50%2C51%2C56"
-            "%2C58%2C59%2C60%2C2%2C3%2C5%2C6%2C7%2C8%2C9%2C10"
-            "%2C11%2C120%2C1%2C4%2C12%2C122%2C23%2C24%2C25%2C27"
-            "%2C103%2C26%2C68%2C13%2C14%2C15%2C16%2C17%2C18%2C19"
-            "%2C20%2C21%2C22%2C69%2C70%2C102%2C118%2C63%2C64%2C65"
-            "%2C66%2C67%2C107%2C61%2C62%2C57&districts=4%2C5%2C1"
-            "%2C3%2C2%2C6&currency_id=2&CardView=1&price_from=400"
-            "&page=1&owner_type=physical"
+            "&cities=1&currency_id=2&CardView=1"
+            "&price_from=400&owner_type=physical&page=1"
         ),
     },
 ]
