@@ -2,6 +2,9 @@ name: Check MyHome listings
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+      timezone: "Asia/Tbilisi"
 
 permissions:
   contents: write
