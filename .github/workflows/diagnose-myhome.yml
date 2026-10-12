@@ -80,9 +80,12 @@ jobs:
                                   wait_until="domcontentloaded",
                                   timeout=90000,
                               )
+
+                              await page.wait_for_timeout(5_000)
+
                               for _ in range(3):
                                   await page.mouse.wheel(0, 1600)
-                                  await page.wait_for_timeout(500)
+                                  await page.wait_for_timeout(700)
 
                               hrefs = await page.locator("a[href]").evaluate_all(
                                   "els => els.map(a => a.href)"
