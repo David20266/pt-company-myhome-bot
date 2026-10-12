@@ -27,8 +27,8 @@ FRESHNESS_GRACE_MINUTES = 5
 # Normal production safety gate. Keep the established 35-minute behavior.
 MAX_LISTING_AGE_MINUTES = 50
 
-# The new scan reads the first page of three separate public filters.
-# Require a modest combined result before advancing state.
+# The scan reads the first page of the combined public search.
+# Require a modest result set before advancing state.
 MIN_HEALTHY_LISTINGS = 10
 # Accept a partial scan only when page 1 returned a credible result set.
 MIN_PARTIAL_SCAN_LISTINGS = 10
@@ -49,42 +49,14 @@ _LAST_TELEGRAM_SEND_MONOTONIC = 0.0
 SOURCES = [
     {
         "key": "myhome_rent",
-        "label": "apartments",
+        "label": "all categories",
         "site": "MyHome.ge",
         "deal": "rent",
         "rooms": None,
         "pages": 1,
         "url": (
             "https://www.myhome.ge/en/real-estate/rent/apartment/tbilisi/"
-            "?deal_types=2&real_estate_types=1"
-            "&cities=1&currency_id=2&CardView=1"
-            "&price_from=400&owner_type=physical&page=1"
-        ),
-    },
-    {
-        "key": "myhome_rent",
-        "label": "houses",
-        "site": "MyHome.ge",
-        "deal": "rent",
-        "rooms": None,
-        "pages": 1,
-        "url": (
-            "https://www.myhome.ge/en/real-estate/rent/private-house/tbilisi/"
-            "?deal_types=2&real_estate_types=2"
-            "&cities=1&currency_id=2&CardView=1"
-            "&price_from=400&owner_type=physical&page=1"
-        ),
-    },
-    {
-        "key": "myhome_rent",
-        "label": "country houses",
-        "site": "MyHome.ge",
-        "deal": "rent",
-        "rooms": None,
-        "pages": 1,
-        "url": (
-            "https://www.myhome.ge/en/real-estate/rent/country-house/tbilisi/"
-            "?deal_types=2&real_estate_types=3"
+            "?deal_types=2&real_estate_types=1%2C2%2C3"
             "&cities=1&currency_id=2&CardView=1"
             "&price_from=400&owner_type=physical&page=1"
         ),
