@@ -27,10 +27,9 @@ FRESHNESS_GRACE_MINUTES = 5
 # Normal production safety gate. Keep the established 35-minute behavior.
 MAX_LISTING_AGE_MINUTES = 50
 
-# A healthy production scan normally sees ~400+ listings across 22 pages.
-# Refuse to advance state when MyHome changes/breaks rendering and the
-# scraper suddenly sees an implausibly small result set.
-MIN_HEALTHY_LISTINGS = 100
+# The new scan reads the first page of three separate public filters.
+# Require a modest combined result before advancing state.
+MIN_HEALTHY_LISTINGS = 10
 # Accept a partial scan only when page 1 returned a credible result set.
 MIN_PARTIAL_SCAN_LISTINGS = 10
 
@@ -50,13 +49,42 @@ _LAST_TELEGRAM_SEND_MONOTONIC = 0.0
 SOURCES = [
     {
         "key": "myhome_rent",
+        "label": "apartments",
         "site": "MyHome.ge",
         "deal": "rent",
         "rooms": None,
-        "pages": 22,
+        "pages": 1,
         "url": (
             "https://www.myhome.ge/en/real-estate/rent/apartment/tbilisi/"
-            "?deal_types=2&real_estate_types=1%2C2%2C3"
+            "?deal_types=2&real_estate_types=1"
+            "&cities=1&currency_id=2&CardView=1"
+            "&price_from=400&owner_type=physical&page=1"
+        ),
+    },
+    {
+        "key": "myhome_rent",
+        "label": "houses",
+        "site": "MyHome.ge",
+        "deal": "rent",
+        "rooms": None,
+        "pages": 1,
+        "url": (
+            "https://www.myhome.ge/en/real-estate/rent/private-house/tbilisi/"
+            "?deal_types=2&real_estate_types=2"
+            "&cities=1&currency_id=2&CardView=1"
+            "&price_from=400&owner_type=physical&page=1"
+        ),
+    },
+    {
+        "key": "myhome_rent",
+        "label": "country houses",
+        "site": "MyHome.ge",
+        "deal": "rent",
+        "rooms": None,
+        "pages": 1,
+        "url": (
+            "https://www.myhome.ge/en/real-estate/rent/country-house/tbilisi/"
+            "?deal_types=2&real_estate_types=3"
             "&cities=1&currency_id=2&CardView=1"
             "&price_from=400&owner_type=physical&page=1"
         ),
@@ -329,19 +357,11 @@ async def scrape_all_sources():
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"],
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
         )
         context = await browser.new_context(
             locale="en-US",
             viewport={"width": 1440, "height": 1200},
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/151.0.0.0 Safari/537.36"
-            ),
-        )
-        await context.add_init_script(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
         )
 
         for source in SOURCES:
@@ -349,16 +369,29 @@ async def scrape_all_sources():
             for page_number in range(1, page_count + 1):
                 page = await context.new_page()
                 try:
-                    print(f"Checking {source['key']} page {page_number}")
+                    source_label = source.get("label", source["key"])
+                    print(f"Checking {source_label} page {page_number}")
                     requested_url = page_url(source["url"], page_number)
                     candidates: list[dict[str, str]] = []
                     page_listing_ids: set[str | None] = set()
                     for attempt in range(1, 4):
-                        await page.goto(
+                        response = await page.goto(
                             requested_url,
                             wait_until="domcontentloaded",
                             timeout=90_000,
                         )
+                        if response is not None and response.status == 403:
+                            response_headers = response.headers
+                            print(
+                                f"{source_label} page {page_number}: HTTP 403; "
+                                f"server={response_headers.get('server', 'unknown')}; "
+                                f"cf-ray={response_headers.get('cf-ray', 'unknown')}. "
+                                "Stopping retries for this request."
+                            )
+                            errors.append(
+                                f"{source_label} page {page_number}: HTTP 403"
+                            )
+                            break
                         await page.wait_for_timeout(5_000)
                         for _ in range(3):
                             await page.mouse.wheel(0, 1600)
@@ -371,7 +404,7 @@ async def scrape_all_sources():
                         }
                         page_listing_ids.discard(None)
                         print(
-                            f"{source['key']} page {page_number}: "
+                            f"{source_label} page {page_number}: "
                             f"{len(page_listing_ids)} listing IDs detected "
                             f"(attempt {attempt}/3)"
                         )
@@ -379,13 +412,13 @@ async def scrape_all_sources():
                             break
                         if attempt < 3:
                             print(
-                                f"{source['key']} page {page_number}: "
+                                f"{source_label} page {page_number}: "
                                 "unexpected empty result; retrying same page"
                             )
                             await page.wait_for_timeout(2_000)
 
                     if not page_listing_ids:
-                        empty_pages.append(f"{source['key']} page {page_number}")
+                        empty_pages.append(f"{source_label} page {page_number}")
                         continue
 
                     for candidate in candidates:
@@ -418,9 +451,9 @@ async def scrape_all_sources():
                             "summary": text[:700],
                         }
                 except PlaywrightTimeoutError:
-                    errors.append(f"{source['key']} page {page_number}: timeout")
+                    errors.append(f"{source.get('label', source['key'])} page {page_number}: timeout")
                 except Exception as exc:
-                    errors.append(f"{source['key']} page {page_number}: {type(exc).__name__}: {exc}")
+                    errors.append(f"{source.get('label', source['key'])} page {page_number}: {type(exc).__name__}: {exc}")
                 finally:
                     await page.close()
         await context.close()
@@ -750,14 +783,12 @@ async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"],
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
         )
         context = await browser.new_context(
             locale="ka-GE",
             viewport={"width": 1440, "height": 1200},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
         )
-        await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         for item in items:
             page = await context.new_page()
             try:
@@ -1091,4 +1122,3 @@ async def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
-
