@@ -66,9 +66,20 @@ async def resilient_scrape_all_sources():
 
                         if response is not None and response.status >= 400:
                             final_error = f"HTTP {response.status}"
+                            headers = response.headers
+
                             print(
                                 f"{source['key']} page {page_number}: "
-                                f"{final_error} (attempt {attempt}/{MAX_PAGE_ATTEMPTS})"
+                                f"{final_error} "
+                                f"(attempt {attempt}/{MAX_PAGE_ATTEMPTS}); "
+                                f"requested_url={requested_url}; "
+                                f"response_url={response.url}"
+                            )
+                            print(
+                                f"{source['key']} page {page_number}: "
+                                f"server={headers.get('server', '')}; "
+                                f"content_type={headers.get('content-type', '')}; "
+                                f"cf_ray={headers.get('cf-ray', '')}"
                             )
                         else:
                             # Trigger lazy rendering, then poll the actual DOM
@@ -91,7 +102,9 @@ async def resilient_scrape_all_sources():
                                 if page_listing_ids:
                                     break
                                 if poll < PAGE_READY_POLL_ATTEMPTS:
-                                    await page.wait_for_timeout(PAGE_READY_POLL_INTERVAL_MS)
+                                    await page.wait_for_timeout(
+                                        PAGE_READY_POLL_INTERVAL_MS
+                                    )
 
                             print(
                                 f"{source['key']} page {page_number}: "
