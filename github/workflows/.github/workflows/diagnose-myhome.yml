@@ -1,0 +1,52 @@
+                          "Object.defineProperty(navigator, 'webdriver', "
+                          "{get: () => undefined})"
+                      )
+                      for owner, page_no in cases:
+                          url = URLS[owner].format(page_no)
+                          page = await context.new_page()
+                          try:
+                              response = await page.goto(
+                                  url, wait_until="domcontentloaded", timeout=90000
+                              )
+                              for _ in range(3):
+                                  await page.mouse.wheel(0, 1600)
+                                  await page.wait_for_timeout(500)
+                              hrefs = await page.locator("a[href]").evaluate_all(
+                                  "els => els.map(a => a.href)"
+                              )
+                              ids = set()
+                              for href in hrefs:
+                                  match = ID_RE.search(href)
+                                  if match:
+                                      ids.add(match.group(1))
+                              headers = response.headers if response else {}
+                              title = await page.title()
+                              body = re.sub(r"\s+", " ", await page.locator("body").inner_text())[:180]
+                              print(json.dumps({
+                                  "sweep": sweep_no,
+                                  "search": owner,
+                                  "page": page_no,
+                                  "status": response.status if response else None,
+                                  "server": headers.get("server"),
+                                  "cf_ray": headers.get("cf-ray"),
+                                  "content_type": headers.get("content-type"),
+                                  "final_url": page.url,
+                                  "title": title,
+                                  "listing_ids": len(ids),
+                                  "body_sample": body,
+                              }, ensure_ascii=False))
+                          except Exception as exc:
+                              print(json.dumps({
+                                  "sweep": sweep_no,
+                                  "search": owner,
+                                  "page": page_no,
+                                  "exception": f"{type(exc).__name__}: {exc}",
+                              }, ensure_ascii=False))
+                          finally:
+                              await page.close()
+                          await asyncio.sleep(2)
+                      await context.close()
+                  await browser.close()
+
+          asyncio.run(main())
+          PY
