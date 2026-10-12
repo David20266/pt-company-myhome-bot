@@ -1,27 +1,104 @@
+name: Diagnose MyHome pagination
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright/python:v1.62.0-noble
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Python packages
+        run: pip install -r requirements-cloud.txt
+
+      - name: Compare both MyHome searches on this runner
+        run: |
+          python - <<'PY'
+          import asyncio
+          import json
+          import re
+          from playwright.async_api import async_playwright
+
+          URLS = {
+              "David": (
+                  "https://www.myhome.ge/en/real-estate/rent/apartment/tbilisi/"
+                  "?deal_types=2&real_estate_types=1%2C2%2C3&cities=1"
+                  "&currency_id=2&CardView=1&price_from=400"
+                  "&owner_type=physical&page={}"
+              ),
+              "Katerina": (
+                  "https://www.myhome.ge/en/real-estate/rent/apartment/tbilisi/vake/1-room/"
+                  "?deal_types=2&real_estate_types=1&cities=1&urbans=38,47"
+                  "&districts=4&currency_id=1&CardView=1&owner_type=physical"
+                  "&room_types=1,2,3&page={}"
+              ),
+          }
+          ID_RE = re.compile(
+              r"/(?:udzravi-qoneba|real-estate)/(?:[^/?#]*-)?(\d{6,10})(?:/|$)",
+              re.I,
+          )
+
+          async def main():
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch(
+                      headless=True,
+                      args=[
+                          "--no-sandbox",
+                          "--disable-dev-shm-usage",
+                          "--disable-blink-features=AutomationControlled",
+                      ],
+                  )
+                  ua = (
+                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/151.0.0.0 Safari/537.36"
+                  )
+                  sweeps = [
+                      [("Katerina", 1), ("David", 1), ("Katerina", 2), ("David", 2)],
+                      [("David", 1), ("Katerina", 1), ("David", 2), ("Katerina", 2)],
+                  ]
+
+                  for sweep_no, cases in enumerate(sweeps, 1):
+                      context = await browser.new_context(
+                          locale="en-US",
+                          viewport={"width": 1440, "height": 1200},
+                          user_agent=ua,
+                      )
+                      await context.add_init_script(
                           "Object.defineProperty(navigator, 'webdriver', "
                           "{get: () => undefined})"
                       )
+
                       for owner, page_no in cases:
-                          url = URLS[owner].format(page_no)
                           page = await context.new_page()
                           try:
                               response = await page.goto(
-                                  url, wait_until="domcontentloaded", timeout=90000
+                                  URLS[owner].format(page_no),
+                                  wait_until="domcontentloaded",
+                                  timeout=90000,
                               )
                               for _ in range(3):
                                   await page.mouse.wheel(0, 1600)
                                   await page.wait_for_timeout(500)
+
                               hrefs = await page.locator("a[href]").evaluate_all(
                                   "els => els.map(a => a.href)"
                               )
-                              ids = set()
-                              for href in hrefs:
-                                  match = ID_RE.search(href)
-                                  if match:
-                                      ids.add(match.group(1))
+                              ids = {
+                                  match.group(1)
+                                  for href in hrefs
+                                  if (match := ID_RE.search(href))
+                              }
                               headers = response.headers if response else {}
-                              title = await page.title()
-                              body = re.sub(r"\s+", " ", await page.locator("body").inner_text())[:180]
+                              body = re.sub(
+                                  r"\s+",
+                                  " ",
+                                  await page.locator("body").inner_text(),
+                              )[:180]
+
                               print(json.dumps({
                                   "sweep": sweep_no,
                                   "search": owner,
@@ -31,7 +108,7 @@
                                   "cf_ray": headers.get("cf-ray"),
                                   "content_type": headers.get("content-type"),
                                   "final_url": page.url,
-                                  "title": title,
+                                  "title": await page.title(),
                                   "listing_ids": len(ids),
                                   "body_sample": body,
                               }, ensure_ascii=False))
@@ -45,6 +122,7 @@
                           finally:
                               await page.close()
                           await asyncio.sleep(2)
+
                       await context.close()
                   await browser.close()
 
