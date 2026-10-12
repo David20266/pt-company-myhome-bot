@@ -31,6 +31,8 @@ MAX_LISTING_AGE_MINUTES = 50
 # Refuse to advance state when MyHome changes/breaks rendering and the
 # scraper suddenly sees an implausibly small result set.
 MIN_HEALTHY_LISTINGS = 100
+# Accept a partial scan only when page 1 returned a credible result set.
+MIN_PARTIAL_SCAN_LISTINGS = 10
 
 # One-time outage recovery. The last confirmed Telegram delivery was around
 # 2026-08-13 13:17 Asia/Tbilisi. A small buffer starts recovery at 13:10.
@@ -894,22 +896,48 @@ async def main() -> int:
     state = load_state()
     listings, errors, empty_pages = await scrape_all_sources()
 
+    scan_incomplete = bool(errors or empty_pages)
+
     if errors:
         print("Errors:")
         for error in errors:
             print(f"- {error}")
-        print("UNHEALTHY SCAN: page-level errors detected. State will NOT be saved.")
-        return 1
 
     if empty_pages:
-        print(
-            "UNHEALTHY SCAN: the following pages returned 0 listing IDs "
-            "after 3 attempts: " + ", ".join(empty_pages) + ". "
-            "State will NOT be saved."
-        )
-        return 1
+        print("Empty pages after retries:")
+        for page in empty_pages:
+            print(f"- {page}")
 
-    if len(listings) < MIN_HEALTHY_LISTINGS:
+    if scan_incomplete:
+        first_page_failed = any(
+            re.search(r"\bpage 1\b", issue, re.IGNORECASE)
+            for issue in errors + empty_pages
+        )
+        has_previous_baseline = (
+            bool(state.get("initialized"))
+            and parse_iso_datetime(
+                normalize_text(state.get("last_successful_scan_at", ""))
+            )
+            is not None
+        )
+
+        if (
+            first_page_failed
+            or not has_previous_baseline
+            or len(listings) < MIN_PARTIAL_SCAN_LISTINGS
+        ):
+            print(
+                "UNHEALTHY SCAN: first page failed, there is no saved baseline, "
+                "or too few listings were found. State will NOT be saved."
+            )
+            return 1
+
+        print(
+            f"PARTIAL SCAN: continuing with {len(listings)} valid listings; "
+            "failed pages are skipped."
+        )
+
+    elif len(listings) < MIN_HEALTHY_LISTINGS:
         print(
             "UNHEALTHY SCAN: "
             f"only {len(listings)} listings detected; "
@@ -1037,12 +1065,21 @@ async def main() -> int:
     if not initialized or previous_scan_at is None:
         sent_count = 0
 
-    if recovery_mode:
+    if recovery_mode and scan_incomplete:
+        print("PARTIAL SCAN: URL-change recovery remains pending.")
+    elif recovery_mode:
         state["url_change_recovery_completed"] = True
         print("URL-change recovery completed; future runs use normal freshness.")
 
     state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
-    state["last_successful_scan_at"] = run_started_at.isoformat()
+
+    if scan_incomplete:
+        print(
+            "PARTIAL SCAN: keeping the last successful scan timestamp unchanged."
+        )
+    else:
+        state["last_successful_scan_at"] = run_started_at.isoformat()
+
     save_state(state)
 
     print(
@@ -1054,3 +1091,4 @@ async def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
+
