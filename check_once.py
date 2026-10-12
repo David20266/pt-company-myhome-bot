@@ -24,20 +24,10 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 _NBG_RATES_CACHE: dict[str, float] | None = None
 GEORGIA_TZ = ZoneInfo("Asia/Tbilisi")
 FRESHNESS_GRACE_MINUTES = 5
-# Normal production safety gate. Keep the established 35-minute behavior.
 MAX_LISTING_AGE_MINUTES = 50
-
-# The new scan reads the first page of three separate public filters.
-# Require a modest combined result before advancing state.
 MIN_HEALTHY_LISTINGS = 10
-# Accept a partial scan only when page 1 returned a credible result set.
 MIN_PARTIAL_SCAN_LISTINGS = 10
 
-# One-time outage recovery. The last confirmed Telegram delivery was around
-# 2026-08-13 13:17 Asia/Tbilisi. A small buffer starts recovery at 13:10.
-# Existing seen IDs still prevent duplicates. After one healthy recovery run
-# state["url_change_recovery_completed"] becomes True and normal 35-minute
-# freshness behavior resumes automatically.
 URL_CHANGE_RECOVERY_START_UTC = datetime(
     2026, 8, 13, 9, 10, tzinfo=timezone.utc
 )
@@ -137,10 +127,7 @@ def parse_price_number(raw: str) -> float | None:
 
 
 def extract_price(text: str) -> str:
-    match = re.search(
-        r"(?<!\d)(\d[\d ,.]*?)\s*(₾|\$|€)",
-        text,
-    )
+    match = re.search(r"(?<!\d)(\d[\d ,.]*?)\s*(₾|\$|€)", text)
 
     if not match:
         return "—"
@@ -172,8 +159,7 @@ def extract_price(text: str) -> str:
         else:
             return "—"
 
-    rounded = int(round(usd))
-    return f"${rounded:,}"
+    return f"${int(round(usd)):,}"
 
 
 def extract_area(text: str) -> str:
@@ -191,33 +177,12 @@ def is_target_location(text: str, url: str) -> bool:
 
 def extract_location(text: str) -> str:
     locations = [
-        "საბურთალო",
-        "ვაკე",
-        "ლისის მიმდებარედ",
-        "ნუცუბიძის ფერდობი",
-        "დიდი დიღომი",
-        "დიღომი",
-        "ვერა",
-        "მთაწმინდა",
-        "სოლოლაკი",
-        "ჩუღურეთი",
-        "დიდუბე",
-        "ნაძალადევი",
-        "გლდანი",
-        "მუხიანი",
-        "ვარკეთილი",
-        "ისანი",
-        "სამგორი",
-        "ავლაბარი",
-        "ორთაჭალა",
-        "კრწანისი",
-        "ვაზისუბანი",
-        "ლილო",
-        "თბილისის ზღვა",
-        "ოქროყანა",
-        "წყნეთი",
-        "კოჯორი",
-        "ტაბახმელა",
+        "საბურთალო", "ვაკე", "ლისის მიმდებარედ", "ნუცუბიძის ფერდობი",
+        "დიდი დიღომი", "დიღომი", "ვერა", "მთაწმინდა", "სოლოლაკი",
+        "ჩუღურეთი", "დიდუბე", "ნაძალადევი", "გლდანი", "მუხიანი",
+        "ვარკეთილი", "ისანი", "სამგორი", "ავლაბარი", "ორთაჭალა",
+        "კრწანისი", "ვაზისუბანი", "ლილო", "თბილისის ზღვა",
+        "ოქროყანა", "წყნეთი", "კოჯორი", "ტაბახმელა",
     ]
 
     lowered = normalize_text(text).lower()
@@ -245,7 +210,6 @@ def listing_id_from_url(site: str, url: str) -> str | None:
     except Exception:
         path = urllib.parse.unquote(url)
 
-    # Only treat URLs under known MyHome listing roots as listing candidates.
     if not re.search(r"/(?:udzravi-qoneba|real-estate)(?:/|$)", path, re.IGNORECASE):
         return None
 
@@ -267,8 +231,7 @@ def listing_id_from_url(site: str, url: str) -> str | None:
         query = {}
 
     for key in ("id", "listing_id", "statement_id", "pr_id"):
-        values = query.get(key, [])
-        for value in values:
+        for value in query.get(key, []):
             if re.fullmatch(r"\d{6,10}", value or ""):
                 return value
 
@@ -282,7 +245,13 @@ def page_url(url: str, page_number: int) -> str:
     query.append(("page", str(page_number)))
 
     return urllib.parse.urlunsplit(
-        (parts.scheme, parts.netloc, parts.path, urllib.parse.urlencode(query), parts.fragment)
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urllib.parse.urlencode(query),
+            parts.fragment,
+        )
     )
 
 
@@ -326,6 +295,7 @@ async def scrape_all_sources():
     found: dict[tuple[str, str], dict[str, Any]] = {}
     errors: list[str] = []
     empty_pages: list[str] = []
+
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
@@ -338,20 +308,24 @@ async def scrape_all_sources():
 
         for source in SOURCES:
             page_count = int(source.get("pages", 1))
+
             for page_number in range(1, page_count + 1):
                 page = await context.new_page()
+
                 try:
                     source_label = source.get("label", source["key"])
                     print(f"Checking {source_label} page {page_number}")
                     requested_url = page_url(source["url"], page_number)
                     candidates: list[dict[str, str]] = []
                     page_listing_ids: set[str | None] = set()
+
                     for attempt in range(1, 4):
                         response = await page.goto(
                             requested_url,
                             wait_until="domcontentloaded",
                             timeout=90_000,
                         )
+
                         if response is not None and response.status == 403:
                             response_headers = response.headers
                             print(
@@ -364,7 +338,9 @@ async def scrape_all_sources():
                                 f"{source_label} page {page_number}: HTTP 403"
                             )
                             break
+
                         await page.wait_for_timeout(5_000)
+
                         for _ in range(3):
                             await page.mouse.wheel(0, 1600)
                             await page.wait_for_timeout(700)
@@ -375,13 +351,16 @@ async def scrape_all_sources():
                             for item in candidates
                         }
                         page_listing_ids.discard(None)
+
                         print(
                             f"{source_label} page {page_number}: "
                             f"{len(page_listing_ids)} listing IDs detected "
                             f"(attempt {attempt}/3)"
                         )
+
                         if page_listing_ids:
                             break
+
                         if attempt < 3:
                             print(
                                 f"{source_label} page {page_number}: "
@@ -390,25 +369,35 @@ async def scrape_all_sources():
                             await page.wait_for_timeout(2_000)
 
                     if not page_listing_ids:
-                        empty_pages.append(f"{source_label} page {page_number}")
+                        empty_pages.append(
+                            f"{source_label} page {page_number}"
+                        )
                         continue
 
                     for candidate in candidates:
                         url = candidate["href"].split("#", 1)[0]
                         listing_id = listing_id_from_url(source["site"], url)
+
                         if not listing_id:
                             continue
+
                         text = normalize_text(candidate["text"])
+
                         if not is_target_location(text, url):
                             continue
+
                         rooms = extract_room_count(text, url)
                         room_filter = source.get("rooms")
+
                         if room_filter and rooms not in room_filter:
                             continue
+
                         key = (source["key"], listing_id)
                         current = found.get(key)
+
                         if current and len(current["summary"]) >= len(text):
                             continue
+
                         found[key] = {
                             "source_key": source["key"],
                             "site": source["site"],
@@ -422,14 +411,23 @@ async def scrape_all_sources():
                             "image_url": candidate.get("imageUrl", ""),
                             "summary": text[:700],
                         }
+
                 except PlaywrightTimeoutError:
-                    errors.append(f"{source.get('label', source['key'])} page {page_number}: timeout")
+                    errors.append(
+                        f"{source.get('label', source['key'])} "
+                        f"page {page_number}: timeout"
+                    )
                 except Exception as exc:
-                    errors.append(f"{source.get('label', source['key'])} page {page_number}: {type(exc).__name__}: {exc}")
+                    errors.append(
+                        f"{source.get('label', source['key'])} "
+                        f"page {page_number}: {type(exc).__name__}: {exc}"
+                    )
                 finally:
                     await page.close()
+
         await context.close()
         await browser.close()
+
     return list(found.values()), errors, empty_pages
 
 
@@ -447,16 +445,21 @@ def default_state() -> dict[str, Any]:
 def load_state() -> dict[str, Any]:
     if not STATE_PATH.exists():
         return default_state()
+
     try:
         state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return default_state()
+
     template = default_state()
+
     for key, value in template.items():
         state.setdefault(key, value)
+
     for source in SOURCES:
         state["seen"].setdefault(source["key"], [])
         state["max_ids"].setdefault(source["key"], 0)
+
     return state
 
 
@@ -467,65 +470,115 @@ def save_state(state: dict[str, Any]) -> None:
     )
 
 
-def telegram_api_post(method: str, payload: dict[str, str], *, max_attempts: int = TELEGRAM_MAX_ATTEMPTS) -> bool:
+def telegram_api_post(
+    method: str,
+    payload: dict[str, str],
+    *,
+    max_attempts: int = TELEGRAM_MAX_ATTEMPTS,
+) -> bool:
     global _LAST_TELEGRAM_SEND_MONOTONIC
+
     endpoint = f"https://api.telegram.org/bot{TOKEN}/{method}"
+
     for attempt in range(1, max_attempts + 1):
         elapsed = time.monotonic() - _LAST_TELEGRAM_SEND_MONOTONIC
         delay = TELEGRAM_MIN_INTERVAL_SECONDS - elapsed
+
         if delay > 0:
             time.sleep(delay)
+
         request = urllib.request.Request(
             endpoint,
             data=urllib.parse.urlencode(payload).encode("utf-8"),
             method="POST",
         )
+
         try:
             with urllib.request.urlopen(request, timeout=45) as response:
                 body = response.read().decode("utf-8", errors="replace")
+
                 if response.status != 200:
-                    print(f"Telegram {method} returned HTTP {response.status}: {body}")
+                    print(
+                        f"Telegram {method} returned HTTP "
+                        f"{response.status}: {body}"
+                    )
                     return False
+
                 _LAST_TELEGRAM_SEND_MONOTONIC = time.monotonic()
                 return True
+
         except urllib.error.HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")
+
             if exc.code == 429:
                 retry_after = 5
+
                 try:
                     error_json = json.loads(error_body)
-                    retry_after = int(error_json.get("parameters", {}).get("retry_after", retry_after))
+                    retry_after = int(
+                        error_json.get("parameters", {}).get(
+                            "retry_after",
+                            retry_after,
+                        )
+                    )
                 except (json.JSONDecodeError, TypeError, ValueError):
                     header_value = exc.headers.get("Retry-After")
+
                     if header_value:
                         try:
                             retry_after = int(header_value)
                         except ValueError:
                             pass
-                wait_seconds = max(retry_after + 1, int(TELEGRAM_MIN_INTERVAL_SECONDS) + 1)
-                print(f"Telegram 429 on {method}; waiting {wait_seconds}s (attempt {attempt}/{max_attempts})")
+
+                wait_seconds = max(
+                    retry_after + 1,
+                    int(TELEGRAM_MIN_INTERVAL_SECONDS) + 1,
+                )
+                print(
+                    f"Telegram 429 on {method}; waiting {wait_seconds}s "
+                    f"(attempt {attempt}/{max_attempts})"
+                )
                 time.sleep(wait_seconds)
                 continue
+
             print(f"Telegram {method} HTTP {exc.code}: {error_body}")
             return False
+
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             if attempt >= max_attempts:
-                print(f"Telegram {method} failed after {max_attempts} attempts: {exc}")
+                print(
+                    f"Telegram {method} failed after {max_attempts} "
+                    f"attempts: {exc}"
+                )
                 return False
+
             backoff = min(2 ** attempt, 20)
-            print(f"Telegram {method} temporary error: {exc}; retrying in {backoff}s")
+            print(
+                f"Telegram {method} temporary error: {exc}; "
+                f"retrying in {backoff}s"
+            )
             time.sleep(backoff)
+
     return False
 
 
 def send_telegram(text: str) -> bool:
     return telegram_api_post(
         "sendMessage",
-        {"chat_id": CHAT_ID, "text": text, "parse_mode": "HTML", "disable_web_page_preview": "true"},
+        {
+            "chat_id": CHAT_ID,
+            "text": text,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": "true",
+        },
     )
 
 
-def extract_exact_listing_location(page_html: str, url: str = "", heading_text: str = "") -> str:
+def extract_exact_listing_location(
+    page_html: str,
+    url: str = "",
+    heading_text: str = "",
+) -> str:
     canonical_locations = [
         ("ნუცუბიძის ფერდობი", ["ნუცუბიძის ფერდობ"]),
         ("ლისის მიმდებარედ", ["ლისის მიმდებარ"]),
@@ -559,13 +612,16 @@ def extract_exact_listing_location(page_html: str, url: str = "", heading_text: 
 
     def match_canonical(value: str) -> str:
         value = normalize_text(value).lower()
+
         for canonical, stems in canonical_locations:
             for stem in stems:
                 if stem.lower() in value:
                     return canonical
+
         return ""
 
     heading_location = match_canonical(heading_text)
+
     if heading_location:
         return heading_location
 
@@ -578,13 +634,22 @@ def extract_exact_listing_location(page_html: str, url: str = "", heading_text: 
         r'"urban_name"\s*:\s*"([^"]+)"',
         r'"locationName"\s*:\s*"([^"]+)"',
     ]
+
     structured_candidates = []
+
     for pattern in structured_patterns:
-        for match in re.finditer(pattern, decoded_html, re.IGNORECASE | re.DOTALL):
+        for match in re.finditer(
+            pattern,
+            decoded_html,
+            re.IGNORECASE | re.DOTALL,
+        ):
             location = match_canonical(match.group(1))
+
             if location:
                 structured_candidates.append(location)
+
     structured_candidates = list(dict.fromkeys(structured_candidates))
+
     if len(structured_candidates) == 1:
         return structured_candidates[0]
 
@@ -620,9 +685,11 @@ def extract_exact_listing_location(page_html: str, url: str = "", heading_text: 
         ("tabakhmela", "ტაბახმელა"),
         ("dighomi", "დიღომი"),
     ]
+
     for slug, location in slug_locations:
         if slug in lowered_url:
             return location
+
     return "თბილისი"
 
 
@@ -631,11 +698,19 @@ def get_listing_details(url: str) -> dict[str, str]:
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/151.0.0.0 Safari/537.36"
+            ),
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                "image/avif,image/webp,*/*;q=0.8"
+            ),
             "Accept-Language": "ka,en-US;q=0.9,en;q=0.8",
         },
     )
+
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             page_html = response.read().decode("utf-8", errors="ignore")
@@ -649,109 +724,243 @@ def get_listing_details(url: str) -> dict[str, str]:
         r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']',
         r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']twitter:image["\']',
     ]
+
     for pattern in image_patterns:
         match = re.search(pattern, page_html, re.IGNORECASE)
+
         if match:
             image_url = html.unescape(match.group(1)).strip()
+
             if image_url.startswith("//"):
                 image_url = "https:" + image_url
             elif image_url.startswith("/"):
                 image_url = urllib.parse.urljoin(url, image_url)
+
             if image_url.startswith("http"):
                 details["image_url"] = image_url
                 break
+
     details["location"] = extract_exact_listing_location(page_html, url)
     return details
 
 
 def parse_iso_datetime(value: str) -> datetime | None:
     value = normalize_text(value)
+
     if not value:
         return None
+
     value = value.replace("Z", "+00:00")
+
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError:
         return None
+
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=GEORGIA_TZ)
+
     return parsed.astimezone(timezone.utc)
 
 
-def parse_myhome_posted_at(rendered_text: str, page_html: str, now_local: datetime) -> datetime | None:
+def parse_myhome_posted_at(
+    rendered_text: str,
+    page_html: str,
+    now_local: datetime,
+) -> datetime | None:
     decoded_html = html.unescape(page_html)
+
     structured_patterns = [
-        r'"createdAt"\s*:\s*"([^"]+)"', r'"created_at"\s*:\s*"([^"]+)"',
-        r'"createDate"\s*:\s*"([^"]+)"', r'"publishDate"\s*:\s*"([^"]+)"',
-        r'"publishedAt"\s*:\s*"([^"]+)"', r'"published_at"\s*:\s*"([^"]+)"',
+        r'"createdAt"\s*:\s*"([^"]+)"',
+        r'"created_at"\s*:\s*"([^"]+)"',
+        r'"createDate"\s*:\s*"([^"]+)"',
+        r'"publishDate"\s*:\s*"([^"]+)"',
+        r'"publishedAt"\s*:\s*"([^"]+)"',
+        r'"published_at"\s*:\s*"([^"]+)"',
     ]
+
     for pattern in structured_patterns:
         structured_match = re.search(pattern, decoded_html, re.IGNORECASE)
+
         if structured_match:
             parsed = parse_iso_datetime(structured_match.group(1))
+
             if parsed is not None:
                 return parsed
 
     numeric_patterns = [
-        r'"createdAt"\s*:\s*(\d{10,13})', r'"created_at"\s*:\s*(\d{10,13})',
-        r'"createDate"\s*:\s*(\d{10,13})', r'"publishDate"\s*:\s*(\d{10,13})',
-        r'"publishedAt"\s*:\s*(\d{10,13})', r'"published_at"\s*:\s*(\d{10,13})',
+        r'"createdAt"\s*:\s*(\d{10,13})',
+        r'"created_at"\s*:\s*(\d{10,13})',
+        r'"createDate"\s*:\s*(\d{10,13})',
+        r'"publishDate"\s*:\s*(\d{10,13})',
+        r'"publishedAt"\s*:\s*(\d{10,13})',
+        r'"published_at"\s*:\s*(\d{10,13})',
     ]
+
     for pattern in numeric_patterns:
         numeric_match = re.search(pattern, decoded_html, re.IGNORECASE)
+
         if numeric_match:
             raw = int(numeric_match.group(1))
+
             if raw > 10_000_000_000:
                 raw = raw / 1000
+
             try:
                 return datetime.fromtimestamp(raw, tz=timezone.utc)
             except (OSError, OverflowError, ValueError):
                 pass
 
     rendered = normalize_text(rendered_text)
-    today_match = re.search(r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)", rendered, re.IGNORECASE)
-    if today_match:
-        hour = int(today_match.group(1)); minute = int(today_match.group(2))
-        if hour == 0 and minute == 0:
-            print("Publication time is visible as today 00:00 without a structured timestamp; treating as unverified")
-            return None
-        return now_local.replace(hour=hour, minute=minute, second=0, microsecond=0).astimezone(timezone.utc)
 
-    yesterday_match = re.search(r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)", rendered, re.IGNORECASE)
-    if yesterday_match:
-        yesterday = now_local - timedelta(days=1)
-        return yesterday.replace(hour=int(yesterday_match.group(1)), minute=int(yesterday_match.group(2)), second=0, microsecond=0).astimezone(timezone.utc)
-
-    months = {
-        "იანვარი": 1, "იანვარს": 1, "თებერვალი": 2, "თებერვალს": 2,
-        "მარტი": 3, "მარტს": 3, "აპრილი": 4, "აპრილს": 4,
-        "მაისი": 5, "მაისს": 5, "ივნისი": 6, "ივნისს": 6,
-        "ივლისი": 7, "ივლისს": 7, "აგვისტო": 8, "აგვისტოს": 8,
-        "სექტემბერი": 9, "სექტემბერს": 9, "ოქტომბერი": 10, "ოქტომბერს": 10,
-        "ნოემბერი": 11, "ნოემბერს": 11, "დეკემბერი": 12, "დეკემბერს": 12,
-    }
-    month_pattern = "|".join(sorted((re.escape(month) for month in months), key=len, reverse=True))
-    explicit_match = re.search(
-        rf"(?:^|\s)(\d{{1,2}})\s+({month_pattern})(?:\s+(\d{{4}}))?(?:\s+(\d{{1,2}}):(\d{{2}})(?:-?ზე)?)?",
+    today_match = re.search(
+        r"(?:^|\s)დღეს\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
         rendered,
         re.IGNORECASE,
     )
-    if explicit_match:
-        year = int(explicit_match.group(3)) if explicit_match.group(3) else now_local.year
+
+    if today_match:
+        hour = int(today_match.group(1))
+        minute = int(today_match.group(2))
+
+        if hour == 0 and minute == 0:
+            print(
+                "Publication time is visible as today 00:00 without a "
+                "structured timestamp; treating as unverified"
+            )
+            return None
+
+        return now_local.replace(
+            hour=hour,
+            minute=minute,
+            second=0,
+            microsecond=0,
+        ).astimezone(timezone.utc)
+
+    yesterday_match = re.search(
+        r"(?:^|\s)გუშინ\s+(\d{1,2}):(\d{2})(?:-?ზე)?(?:\s|$)",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if yesterday_match:
+        yesterday = now_local - timedelta(days=1)
+        return yesterday.replace(
+            hour=int(yesterday_match.group(1)),
+            minute=int(yesterday_match.group(2)),
+            second=0,
+            microsecond=0,
+        ).astimezone(timezone.utc)
+
+    english_months = {
+        "jan": 1, "january": 1,
+        "feb": 2, "february": 2,
+        "mar": 3, "march": 3,
+        "apr": 4, "april": 4,
+        "may": 5,
+        "jun": 6, "june": 6,
+        "jul": 7, "july": 7,
+        "aug": 8, "august": 8,
+        "sep": 9, "sept": 9, "september": 9,
+        "oct": 10, "october": 10,
+        "nov": 11, "november": 11,
+        "dec": 12, "december": 12,
+    }
+
+    english_month_pattern = "|".join(
+        sorted(
+            (re.escape(month) for month in english_months),
+            key=len,
+            reverse=True,
+        )
+    )
+
+    english_date_match = re.search(
+        rf"(?:^|\s)(\d{{1,2}})\s+({english_month_pattern})"
+        rf"(?:,?\s+(\d{{1,2}}):(\d{{2}}))?"
+        rf"(?:,?\s+(\d{{4}}))?(?:\s|$)",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if english_date_match:
+        year = int(english_date_match.group(5) or now_local.year)
+        month = english_months[english_date_match.group(2).lower()]
+        day = int(english_date_match.group(1))
+        hour = int(english_date_match.group(3) or "0")
+        minute = int(english_date_match.group(4) or "0")
+
         try:
             local_dt = datetime(
-                year, months[explicit_match.group(2).lower()], int(explicit_match.group(1)),
-                int(explicit_match.group(4) or "0"), int(explicit_match.group(5) or "0"), tzinfo=GEORGIA_TZ,
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                tzinfo=GEORGIA_TZ,
             )
             return local_dt.astimezone(timezone.utc)
         except ValueError:
             pass
+
+    months = {
+        "იანვარი": 1, "იანვარს": 1,
+        "თებერვალი": 2, "თებერვალს": 2,
+        "მარტი": 3, "მარტს": 3,
+        "აპრილი": 4, "აპრილს": 4,
+        "მაისი": 5, "მაისს": 5,
+        "ივნისი": 6, "ივნისს": 6,
+        "ივლისი": 7, "ივლისს": 7,
+        "აგვისტო": 8, "აგვისტოს": 8,
+        "სექტემბერი": 9, "სექტემბერს": 9,
+        "ოქტომბერი": 10, "ოქტომბერს": 10,
+        "ნოემბერი": 11, "ნოემბერს": 11,
+        "დეკემბერი": 12, "დეკემბერს": 12,
+    }
+
+    month_pattern = "|".join(
+        sorted(
+            (re.escape(month) for month in months),
+            key=len,
+            reverse=True,
+        )
+    )
+
+    explicit_match = re.search(
+        rf"(?:^|\s)(\d{{1,2}})\s+({month_pattern})"
+        rf"(?:\s+(\d{{4}}))?"
+        rf"(?:\s+(\d{{1,2}}):(\d{{2}})(?:-?ზე)?)?",
+        rendered,
+        re.IGNORECASE,
+    )
+
+    if explicit_match:
+        year = (
+            int(explicit_match.group(3))
+            if explicit_match.group(3)
+            else now_local.year
+        )
+
+        try:
+            local_dt = datetime(
+                year,
+                months[explicit_match.group(2).lower()],
+                int(explicit_match.group(1)),
+                int(explicit_match.group(4) or "0"),
+                int(explicit_match.group(5) or "0"),
+                tzinfo=GEORGIA_TZ,
+            )
+            return local_dt.astimezone(timezone.utc)
+        except ValueError:
+            pass
+
     return None
 
 
 async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
     if not items:
         return
+
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             headless=True,
@@ -761,76 +970,143 @@ async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
             locale="ka-GE",
             viewport={"width": 1440, "height": 1200},
         )
+
         for item in items:
             page = await context.new_page()
+
             try:
-                await page.goto(item["url"], wait_until="domcontentloaded", timeout=90_000)
+                await page.goto(
+                    item["url"],
+                    wait_until="domcontentloaded",
+                    timeout=90_000,
+                )
                 await page.wait_for_timeout(2_500)
-                rendered_text = normalize_text(await page.locator("body").inner_text())
+
+                rendered_text = normalize_text(
+                    await page.locator("body").inner_text()
+                )
                 page_html = await page.content()
                 now_local = datetime.now(GEORGIA_TZ)
-                posted_at = parse_myhome_posted_at(rendered_text, page_html, now_local)
-                item["posted_at_utc"] = posted_at.isoformat() if posted_at is not None else ""
+
+                # MyHome search cards show the date, for example:
+                # "12 Oct, 22:25". Detail pages may omit this timestamp.
+                posted_at = parse_myhome_posted_at(
+                    item.get("summary", ""),
+                    "",
+                    now_local,
+                )
+
+                if posted_at is None:
+                    posted_at = parse_myhome_posted_at(
+                        rendered_text,
+                        page_html,
+                        now_local,
+                    )
+
+                item["posted_at_utc"] = (
+                    posted_at.isoformat() if posted_at is not None else ""
+                )
 
                 heading_parts: list[str] = []
+
                 for selector in ("h1", "h2", "h3"):
                     locator = page.locator(selector)
+
                     try:
                         count = min(await locator.count(), 5)
                     except Exception:
                         count = 0
+
                     for index in range(count):
                         try:
-                            value = normalize_text(await locator.nth(index).inner_text())
+                            value = normalize_text(
+                                await locator.nth(index).inner_text()
+                            )
                         except Exception:
                             continue
+
                         if not value:
                             continue
+
                         if selector == "h1":
                             heading_parts.append(value)
                             continue
+
                         if "ქირავდება" in value or "იყიდება" in value:
                             heading_parts.append(value)
 
                 listing_heading = " ".join(heading_parts)
-                item["location"] = extract_exact_listing_location(page_html, item["url"], listing_heading)
+                item["location"] = extract_exact_listing_location(
+                    page_html,
+                    item["url"],
+                    listing_heading,
+                )
 
-                # Image metadata is optional. Some listing pages omit these tags;
-                # that must not invalidate a publication time parsed above.
+                # Image metadata is optional. Missing tags must not invalidate
+                # a publication time parsed above.
                 og_image = None
+
                 try:
-                    og_image_locator = page.locator('meta[property="og:image"]')
+                    og_image_locator = page.locator(
+                        'meta[property="og:image"]'
+                    )
+
                     if await og_image_locator.count():
                         og_image = await og_image_locator.first.get_attribute(
-                            "content", timeout=3_000
+                            "content",
+                            timeout=3_000,
                         )
+
                     if not og_image:
                         twitter_image_locator = page.locator(
                             'meta[name="twitter:image"]'
                         )
+
                         if await twitter_image_locator.count():
-                            og_image = await twitter_image_locator.first.get_attribute(
-                                "content", timeout=3_000
+                            og_image = (
+                                await twitter_image_locator.first.get_attribute(
+                                    "content",
+                                    timeout=3_000,
+                                )
                             )
+
                 except Exception as image_exc:
                     print(
-                        f"Image metadata unavailable for {item['listing_id']}: "
+                        f"Image metadata unavailable for "
+                        f"{item['listing_id']}: "
                         f"{type(image_exc).__name__}: {image_exc}"
                     )
+
                 if og_image:
                     og_image = html.unescape(og_image).strip()
+
                     if og_image.startswith("//"):
                         og_image = "https:" + og_image
                     elif og_image.startswith("/"):
-                        og_image = urllib.parse.urljoin(item["url"], og_image)
+                        og_image = urllib.parse.urljoin(
+                            item["url"],
+                            og_image,
+                        )
+
                     if og_image.startswith("http"):
                         item["detail_image_url"] = og_image
-                print(f"Detail {item['listing_id']}: posted_at={item.get('posted_at_utc') or 'UNKNOWN'}, location={item.get('location')}")
+
+                print(
+                    f"Detail {item['listing_id']}: "
+                    f"posted_at={item.get('posted_at_utc') or 'UNKNOWN'}, "
+                    f"location={item.get('location')}"
+                )
+
             except Exception as exc:
                 item["posted_at_utc"] = ""
-                print(f"Detail check failed for {item['listing_id']}: {type(exc).__name__}: {exc}")
+                print(
+                    f"Detail check failed for {item['listing_id']}: "
+                    f"{type(exc).__name__}: {exc}"
+                )
+
             finally:
                 await page.close()
+
         await context.close()
         await browser.close()
 
@@ -843,33 +1119,53 @@ def is_fresh_listing(
     recovery_mode: bool = False,
 ) -> bool:
     posted_raw = item.get("posted_at_utc", "")
+
     if not posted_raw:
-        print(f"SKIP {item['listing_id']}: publication time could not be verified")
+        print(
+            f"SKIP {item['listing_id']}: "
+            "publication time could not be verified"
+        )
         return False
 
     posted_at = parse_iso_datetime(posted_raw)
+
     if posted_at is None:
-        print(f"SKIP {item['listing_id']}: invalid publication timestamp {posted_raw!r}")
+        print(
+            f"SKIP {item['listing_id']}: "
+            f"invalid publication timestamp {posted_raw!r}"
+        )
         return False
 
     if recovery_mode:
         lower_bound = URL_CHANGE_RECOVERY_START_UTC
-        upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+        upper_bound = run_started_at + timedelta(
+            minutes=FRESHNESS_GRACE_MINUTES
+        )
     else:
-        scan_lower_bound = previous_scan_at - timedelta(minutes=FRESHNESS_GRACE_MINUTES)
-        absolute_lower_bound = run_started_at - timedelta(minutes=MAX_LISTING_AGE_MINUTES)
+        scan_lower_bound = previous_scan_at - timedelta(
+            minutes=FRESHNESS_GRACE_MINUTES
+        )
+        absolute_lower_bound = run_started_at - timedelta(
+            minutes=MAX_LISTING_AGE_MINUTES
+        )
         lower_bound = max(scan_lower_bound, absolute_lower_bound)
-        upper_bound = run_started_at + timedelta(minutes=FRESHNESS_GRACE_MINUTES)
+        upper_bound = run_started_at + timedelta(
+            minutes=FRESHNESS_GRACE_MINUTES
+        )
 
     fresh = lower_bound <= posted_at <= upper_bound
 
     if not fresh:
-        age_minutes = (run_started_at - posted_at).total_seconds() / 60
+        age_minutes = (
+            run_started_at - posted_at
+        ).total_seconds() / 60
         mode = "recovery" if recovery_mode else "normal"
         print(
             f"SKIP {item['listing_id']}: not fresh ({mode}); "
-            f"posted={posted_at.isoformat()}, age={age_minutes:.1f}min, "
-            f"allowed={lower_bound.isoformat()}..{upper_bound.isoformat()}"
+            f"posted={posted_at.isoformat()}, "
+            f"age={age_minutes:.1f}min, "
+            f"allowed={lower_bound.isoformat()}.."
+            f"{upper_bound.isoformat()}"
         )
 
     return fresh
@@ -878,25 +1174,41 @@ def is_fresh_listing(
 def send_listing_to_telegram(item: dict[str, Any]) -> bool:
     item = dict(item)
     image_url = (item.get("detail_image_url") or "").strip()
+
     if not image_url:
         details = get_listing_details(item["url"])
+
         if details["location"] and item.get("location") == "თბილისი":
             item["location"] = details["location"]
+
         image_url = details["image_url"]
+
     caption = format_listing(item)
+
     if image_url:
         if telegram_api_post(
             "sendPhoto",
-            {"chat_id": CHAT_ID, "photo": image_url, "caption": caption, "parse_mode": "HTML"},
+            {
+                "chat_id": CHAT_ID,
+                "photo": image_url,
+                "caption": caption,
+                "parse_mode": "HTML",
+            },
         ):
             return True
-        print(f"Photo delivery failed for {item['listing_id']}; trying text-only fallback")
+
+        print(
+            f"Photo delivery failed for {item['listing_id']}; "
+            "trying text-only fallback"
+        )
+
     return send_telegram(caption)
 
 
 def format_listing(item: dict[str, Any]) -> str:
     rooms = item["rooms"] if item["rooms"] is not None else "—"
     safe_url = html.escape(item["url"], quote=True)
+
     return (
         "🏠 <b>ახალი განცხადება</b>\n\n"
         f"🌐 <b>საიტი:</b> {html.escape(item['site'])}\n"
@@ -911,7 +1223,10 @@ def format_listing(item: dict[str, Any]) -> str:
 
 async def main() -> int:
     if not TOKEN or not CHAT_ID:
-        print("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID", file=sys.stderr)
+        print(
+            "Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID",
+            file=sys.stderr,
+        )
         return 2
 
     run_started_at = datetime.now(timezone.utc)
@@ -922,11 +1237,13 @@ async def main() -> int:
 
     if errors:
         print("Errors:")
+
         for error in errors:
             print(f"- {error}")
 
     if empty_pages:
         print("Empty pages after retries:")
+
         for page in empty_pages:
             print(f"- {page}")
 
@@ -949,8 +1266,9 @@ async def main() -> int:
             or len(listings) < MIN_PARTIAL_SCAN_LISTINGS
         ):
             print(
-                "UNHEALTHY SCAN: first page failed, there is no saved baseline, "
-                "or too few listings were found. State will NOT be saved."
+                "UNHEALTHY SCAN: first page failed, there is no saved "
+                "baseline, or too few listings were found. "
+                "State will NOT be saved."
             )
             return 1
 
@@ -1008,9 +1326,11 @@ async def main() -> int:
         state["initialized"] = True
         send_telegram(
             "✅ მონიტორინგი ჩართულია.\n\n"
-            "ვაკონტროლებ MyHome.ge-ზე თბილისში გასაქირავებელ ბინებს, კერძო სახლებსა და აგარაკებს — 400$-დან, "
+            "ვაკონტროლებ MyHome.ge-ზე თბილისში გასაქირავებელ "
+            "ბინებს, კერძო სახლებსა და აგარაკებს — 400$-დან, "
             "მხოლოდ ფიზიკური პირების განცხადებებს.\n\n"
-            "არსებული განცხადებები შენახულია; შეტყობინებები მოვა მხოლოდ ახალი განცხადებების დამატებისას."
+            "არსებული განცხადებები შენახულია; შეტყობინებები მოვა "
+            "მხოლოდ ახალი განცხადებების დამატებისას."
         )
         print(
             f"Initial baseline: stored {len(unseen_items)} "
@@ -1025,7 +1345,6 @@ async def main() -> int:
 
     else:
         await enrich_unseen_items(unseen_items)
-
         retry_unverified: list[dict[str, Any]] = []
 
         for item in unseen_items:
@@ -1091,13 +1410,17 @@ async def main() -> int:
         print("PARTIAL SCAN: URL-change recovery remains pending.")
     elif recovery_mode:
         state["url_change_recovery_completed"] = True
-        print("URL-change recovery completed; future runs use normal freshness.")
+        print(
+            "URL-change recovery completed; "
+            "future runs use normal freshness."
+        )
 
     state["heartbeat_week"] = run_started_at.strftime("%G-W%V")
 
     if scan_incomplete:
         print(
-            "PARTIAL SCAN: keeping the last successful scan timestamp unchanged."
+            "PARTIAL SCAN: keeping the last successful scan timestamp "
+            "unchanged."
         )
     else:
         state["last_successful_scan_at"] = run_started_at.isoformat()
@@ -1105,8 +1428,10 @@ async def main() -> int:
     save_state(state)
 
     print(
-        f"Found {len(listings)} listings; unseen {len(unseen_items)}; "
-        f"verified-new {len(new_items)}; sent {sent_count} notifications"
+        f"Found {len(listings)} listings; "
+        f"unseen {len(unseen_items)}; "
+        f"verified-new {len(new_items)}; "
+        f"sent {sent_count} notifications"
     )
     return 0
 
