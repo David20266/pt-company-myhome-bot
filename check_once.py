@@ -27,8 +27,8 @@ FRESHNESS_GRACE_MINUTES = 5
 # Normal production safety gate. Keep the established 35-minute behavior.
 MAX_LISTING_AGE_MINUTES = 50
 
-# The scan reads the first page of the combined public search.
-# Require a modest result set before advancing state.
+# The new scan reads the first page of three separate public filters.
+# Require a modest combined result before advancing state.
 MIN_HEALTHY_LISTINGS = 10
 # Accept a partial scan only when page 1 returned a credible result set.
 MIN_PARTIAL_SCAN_LISTINGS = 10
@@ -795,9 +795,28 @@ async def enrich_unseen_items(items: list[dict[str, Any]]) -> None:
                 listing_heading = " ".join(heading_parts)
                 item["location"] = extract_exact_listing_location(page_html, item["url"], listing_heading)
 
-                og_image = await page.locator('meta[property="og:image"]').get_attribute("content")
-                if not og_image:
-                    og_image = await page.locator('meta[name="twitter:image"]').get_attribute("content")
+                # Image metadata is optional. Some listing pages omit these tags;
+                # that must not invalidate a publication time parsed above.
+                og_image = None
+                try:
+                    og_image_locator = page.locator('meta[property="og:image"]')
+                    if await og_image_locator.count():
+                        og_image = await og_image_locator.first.get_attribute(
+                            "content", timeout=3_000
+                        )
+                    if not og_image:
+                        twitter_image_locator = page.locator(
+                            'meta[name="twitter:image"]'
+                        )
+                        if await twitter_image_locator.count():
+                            og_image = await twitter_image_locator.first.get_attribute(
+                                "content", timeout=3_000
+                            )
+                except Exception as image_exc:
+                    print(
+                        f"Image metadata unavailable for {item['listing_id']}: "
+                        f"{type(image_exc).__name__}: {image_exc}"
+                    )
                 if og_image:
                     og_image = html.unescape(og_image).strip()
                     if og_image.startswith("//"):
