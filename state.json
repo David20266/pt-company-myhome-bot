@@ -14530,13 +14530,14 @@
       "26346816",
       "26347214",
       "26346598",
-      "26302196"
+      "26302196",
+      "26337170"
     ]
   },
   "max_ids": {
     "myhome_rent": 26347214
   },
   "heartbeat_week": "2026-W42",
-  "last_successful_scan_at": "2026-10-15T07:48:16.744973+00:00",
+  "last_successful_scan_at": "2026-10-15T08:08:12.938333+00:00",
   "url_change_recovery_completed": true
 }
