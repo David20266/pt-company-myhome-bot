@@ -14601,13 +14601,14 @@
       "26398039",
       "26379778",
       "26400604",
-      "26401945"
+      "26401945",
+      "26310941"
     ]
   },
   "max_ids": {
     "myhome_rent": 26401945
   },
   "heartbeat_week": "2026-W43",
-  "last_successful_scan_at": "2026-10-20T12:53:01.413669+00:00",
+  "last_successful_scan_at": "2026-10-20T13:08:31.168682+00:00",
   "url_change_recovery_completed": true
 }
