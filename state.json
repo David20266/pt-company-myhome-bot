@@ -14677,13 +14677,14 @@
       "26465439",
       "26432280",
       "26470817",
-      "26448418"
+      "26448418",
+      "26471801"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26470817
+    "myhome_rent": 26471801
   },
   "heartbeat_week": "2026-W44",
-  "last_successful_scan_at": "2026-10-26T18:23:02.414864+00:00",
+  "last_successful_scan_at": "2026-10-26T18:38:03.481139+00:00",
   "url_change_recovery_completed": true
 }
