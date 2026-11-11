@@ -14899,13 +14899,14 @@
       "26642257",
       "26643943",
       "26643573",
-      "26638634"
+      "26638634",
+      "26637974"
     ]
   },
   "max_ids": {
     "myhome_rent": 26643943
   },
   "heartbeat_week": "2026-W46",
-  "last_successful_scan_at": "2026-11-11T16:48:06.080427+00:00",
+  "last_successful_scan_at": "2026-11-11T17:03:05.434659+00:00",
   "url_change_recovery_completed": true
 }
