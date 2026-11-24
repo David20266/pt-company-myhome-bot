@@ -15116,13 +15116,15 @@
       "26771921",
       "26780873",
       "26781673",
-      "26783178"
+      "26783178",
+      "18464357",
+      "26786117"
     ]
   },
   "max_ids": {
-    "myhome_rent": 26783178
+    "myhome_rent": 26786117
   },
   "heartbeat_week": "2026-W48",
-  "last_successful_scan_at": "2026-11-24T13:32:55.787853+00:00",
+  "last_successful_scan_at": "2026-11-24T13:52:57.144090+00:00",
   "url_change_recovery_completed": true
 }
